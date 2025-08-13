@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langchain
+langsmith
+pinecone-client
+openai
+pydantic
+requests
+python-dotenv
+redis
+pytest
