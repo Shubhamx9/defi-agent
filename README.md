@@ -41,27 +41,33 @@ User Query → Intent Classification → Route Decision
 
 ### Technology Stack
 
+**AI Model Systems**
+- **Gemini System**: Free Google AI models (gemini-1.5-flash, gemini-1.5-pro)
+- **GPT-5 System**: Latest OpenAI models (gpt-5, gpt-5-mini, gpt-5-nano)
+- **Seamless Switching**: Toggle between systems with one environment variable
+
 **Backend Framework**
-- FastAPI 0.104.1 with async support
-- Pydantic schemas for type safety
-- SlowAPI for rate limiting
+- FastAPI with async support and auto-documentation
+- Pydantic schemas for complete type safety
+- SlowAPI for intelligent rate limiting
 
 **AI & ML**
-- LangChain 0.1.0 for orchestration
-- OpenAI GPT-4o-mini for cost efficiency
-- Sentence Transformers for embeddings
-- LangSmith for observability
+- LangChain for AI orchestration and chaining
+- LangSmith for observability and tracing
+- Sentence Transformers for vector embeddings
+- Smart model selection and cost optimization
 
 **Data Layer**
-- Pinecone for vector search
-- Redis for session management
-- Structured caching with TTL
+- Pinecone for semantic vector search
+- Redis for session management and caching
+- Conversation memory with context awareness
 
 **Production Features**
-- CORS middleware for frontend integration
-- Comprehensive health checks
-- Input sanitization & security
-- Structured error handling
+- Enterprise-grade security and input sanitization
+- Comprehensive health monitoring and metrics
+- CORS middleware for secure frontend integration
+- Structured error handling with request tracking
+- Kubernetes-ready deployment configuration
 
 ## 🚀 Quick Start
 
@@ -92,18 +98,40 @@ cp backend/.env.example backend/.env
 
 Required environment variables:
 ```env
-# API Keys
-OPENAI_API_KEY=your_openai_key
+# =============================================================================
+# AI SYSTEM SELECTION
+# =============================================================================
+USE_GEMINI=true  # true = Free Gemini, false = Paid GPT-5
+
+# API Keys (choose based on USE_GEMINI setting)
+GOOGLE_API_KEY=your_google_api_key      # Required if USE_GEMINI=true
+OPENAI_API_KEY=your_openai_api_key      # Required if USE_GEMINI=false
+
+# Other API Keys
 PINECONE_API_KEY=your_pinecone_key
 LANGSMITH_API_KEY=your_langsmith_key
 
-# Database Configuration
+# =============================================================================
+# MODEL CONFIGURATION
+# =============================================================================
+# For Gemini (Free)
+INTENT_MODEL=gemini-1.5-flash
+QUERY_MODEL=gemini-1.5-pro
+ACTION_MODEL=gemini-1.5-flash
+
+# For GPT-5 (Paid) - uncomment when USE_GEMINI=false
+# INTENT_MODEL=gpt-5-nano
+# QUERY_MODEL=gpt-5-mini
+# ACTION_MODEL=gpt-5-mini
+
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
 PINECONE_INDEX=defi-queries
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=your_redis_password
 
-# Security Settings
 DEBUG=false
 ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8501"]
 RATE_LIMIT_PER_MINUTE=60
@@ -182,23 +210,40 @@ GET /health/live          # Kubernetes liveness
 
 ## 🔧 Configuration
 
+### AI Model System Selection
+```bash
+# Choose your AI system in .env file
+USE_GEMINI=true   # Free Google Gemini models
+USE_GEMINI=false  # Paid OpenAI GPT-5 models
+```
+
 ### Model Configuration
 ```python
-# Default settings in backend/config/settings.py
-DEFAULT_MODEL = "gpt-4o-mini"
-DEFAULT_TEMPERATURE = 0.0
-MAX_TOKENS = 1000
+# Gemini Models (Free)
+INTENT_MODEL=gemini-1.5-flash    # Ultra-fast classification
+QUERY_MODEL=gemini-1.5-pro       # Advanced reasoning
+ACTION_MODEL=gemini-1.5-flash    # Parameter extraction
 
+# GPT-5 Models (Paid)
+INTENT_MODEL=gpt-5-nano          # $0.05 input per 1K tokens
+QUERY_MODEL=gpt-5-mini           # $0.25 input per 1K tokens  
+ACTION_MODEL=gpt-5-mini          # $0.25 input per 1K tokens
+```
+
+### System Settings
+```python
 # Vector search thresholds
 HIGH_CONFIDENCE_THRESHOLD = 0.98
 MEDIUM_CONFIDENCE_THRESHOLD = 0.90
 VECTOR_SEARCH_TOP_K = 3
-```
 
-### Session Management
-```python
+# Session management
 SESSION_TTL = 300  # 5 minutes
 MAX_CONVERSATION_HISTORY = 10
+
+# Rate limiting
+RATE_LIMIT_PER_MINUTE = 60
+RATE_LIMIT_PER_HOUR = 1000
 ```
 
 ## 🛡️ Security Features
@@ -252,38 +297,88 @@ curl http://localhost:8000/health/detailed
 
 ## 💰 Cost Optimization
 
-### Smart Routing Strategy
-- **High confidence (≥0.98)**: Direct vector DB response (0% LLM cost)
-- **Medium confidence (0.90-0.98)**: LLM refinement only when needed
-- **Low confidence (<0.90)**: LLM fallback with minimal context
+### Dual AI System Architecture
+```python
+# FREE Option: Gemini Models
+USE_GEMINI=true
+- 100% free for development and testing
+- 15 requests/minute, 1,500 requests/day
+- Perfect for demos and prototyping
 
-### Conversation Memory
-- Context only added for detected follow-ups
-- 2-minute relevance window
-- Truncated previous responses (100 chars)
-- **Estimated cost increase**: 5-10% overall
+# PAID Option: GPT-5 Models  
+USE_GEMINI=false
+- gpt-5-nano: $0.05 input per 1K tokens (90% cheaper than GPT-4)
+- gpt-5-mini: $0.25 input per 1K tokens (balanced performance)
+- gpt-5: $1.25 input per 1K tokens (maximum capability)
+```
+
+### Smart Routing Strategy
+- **High confidence (≥0.98)**: Direct vector DB response (0% AI cost)
+- **Medium confidence (0.90-0.98)**: AI refinement only when needed
+- **Low confidence (<0.90)**: AI fallback with minimal context
+
+### Intelligent Conversation Memory
+- Context only added for detected follow-ups (not every query)
+- 2-minute relevance window for context freshness
+- Truncated previous responses (100 chars max)
+- **Cost impact**: 5-10% increase vs 100%+ with naive approaches
 
 ### Performance Optimizations
-- Connection pooling for Redis
-- Lazy loading for ML models
-- Efficient caching strategies
-- Async operations where possible
+- Model instance caching and connection pooling
+- Lazy loading for ML models and embeddings
+- Redis session clustering for scalability
+- Async operations with proper error handling
 
 ## 🧪 Testing
 
-### Run Tests
+### System Testing
 ```bash
-cd backend
-pytest tests/ -v
+# 1. Basic health check
+curl http://localhost:8000/
+
+# 2. Check active AI system
+curl http://localhost:8000/health/models
+# Returns: "Gemini" or "GPT-5" system info
+
+# 3. Test DeFi query
+curl -X POST http://localhost:8000/query/ \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is yield farming?"}'
+
+# 4. Test action request
+curl -X POST http://localhost:8000/query/ \
+  -H "Content-Type: application/json" \
+  -d '{"query": "I want to swap 100 USDC for ETH"}'
 ```
 
-### Health Check Testing
+### AI System Switching Test
 ```bash
-# Test all health endpoints
-curl http://localhost:8000/health/
-curl http://localhost:8000/health/detailed
-curl http://localhost:8000/health/ready
-curl http://localhost:8000/health/live
+# Test Gemini (Free)
+echo "USE_GEMINI=true" >> .env
+# Restart server and test
+
+# Test GPT-5 (Paid)  
+echo "USE_GEMINI=false" >> .env
+# Restart server and test
+```
+
+### Health Monitoring
+```bash
+# Comprehensive health checks
+curl http://localhost:8000/health/detailed  # Full system status
+curl http://localhost:8000/health/ready     # Kubernetes readiness
+curl http://localhost:8000/health/live      # Kubernetes liveness
+curl http://localhost:8000/health/models    # AI system info
+```
+
+### Load Testing
+```bash
+# Test rate limiting (should hit 60/minute limit)
+for i in {1..70}; do
+  curl -X POST http://localhost:8000/query/ \
+    -H "Content-Type: application/json" \
+    -d '{"query": "test"}' &
+done
 ```
 
 ## 🚀 Deployment
@@ -346,20 +441,28 @@ spec:
 
 ## 🔮 Future Roadmap
 
-### Planned Features
+### AI System Enhancements
+- [ ] GPT-6 integration when available
+- [ ] Claude 3.5 Sonnet support
+- [ ] Local model support (Llama, Mistral)
+- [ ] Multi-model ensemble responses
+- [ ] Custom fine-tuned DeFi models
+
+### Feature Expansions
 - [ ] Multi-language support (Hindi/Roman script)
-- [ ] Action execution layer (blockchain integration)
-- [ ] Fine-tuned DeFi model
-- [ ] Sentiment analysis
-- [ ] Advanced risk assessment
-- [ ] Portfolio management integration
+- [ ] Blockchain action execution layer
+- [ ] Real-time portfolio tracking
+- [ ] Advanced risk assessment algorithms
+- [ ] Sentiment analysis for market insights
+- [ ] Cross-chain DeFi protocol support
 
 ### Technical Improvements
-- [ ] GraphQL API option
-- [ ] WebSocket support for real-time
-- [ ] Advanced caching strategies
-- [ ] ML model optimization
-- [ ] Enhanced security features
+- [ ] GraphQL API alongside REST
+- [ ] WebSocket support for real-time updates
+- [ ] Advanced caching with Redis Cluster
+- [ ] Distributed model serving
+- [ ] Enhanced security with OAuth2/JWT
+- [ ] Automated model performance monitoring
 
 ## 🤝 Contributing
 
@@ -384,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions, issues, or contributions:
 - Create an issue in this repository
-- Contact: [Your Contact Information]
+- Contact: aayushkr646@gmail.com
 
 ---
 

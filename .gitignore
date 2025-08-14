@@ -143,6 +143,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+fresh_env/
 
 # Environment files (keep .env.example)
 backend/.env

@@ -1,12 +1,17 @@
 import json
 from typing import Dict, Any
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from backend.utils.cache import get_cached_response, set_cached_response
 from backend.models.schemas import ActionExtractionResult, DeFiAction
+from backend.utils.model_selector import get_action_model
 from langsmith import traceable
+import logging
 
-_action_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+logger = logging.getLogger(__name__)
+
+def _get_action_model():
+    """Get action extraction model with fallback handling."""
+    return get_action_model()
 
 _action_prompt = ChatPromptTemplate.from_template(
     """Extract structured DeFi action details from the user's request.
@@ -67,8 +72,9 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
         session_state = _get_default_action_state()
 
     # Step 2: Extract new details
+    action_model = _get_action_model()
     msg = _action_prompt.format_messages(query=user_query)
-    raw_output = _action_llm.invoke(msg).content.strip()
+    raw_output = action_model.invoke(msg).content.strip()
 
     try:
         new_data = json.loads(raw_output)

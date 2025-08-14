@@ -1,17 +1,21 @@
 from typing import Any, Dict, List
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import Document
 from backend.utils.embedding import get_embedding
 from backend.utils.vector_db import query_vector_db
 from backend.utils.cache import get_cached_response, set_cached_response
 from backend.models.schemas import QueryChainResult, SessionData, VectorMatch
+from backend.utils.model_selector import get_query_model
 from langsmith import traceable
 import json
 import time
+import logging
 
-# LLM for refinement / fallback
-_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+logger = logging.getLogger(__name__)
+
+def _get_query_model():
+    """Get query processing model with fallback handling."""
+    return get_query_model()
 
 # ---------- Session Helpers (Redis) ----------
 SESSION_TTL = 300  # seconds
@@ -80,6 +84,7 @@ def run_query_chain(user_id: str, user_query: str) -> QueryChainResult:
 
     # --- No DB hit - LLM fallback with smart context
     if not matches:
+        query_model = _get_query_model()
         if conversation_context:
             prompt = f"""Previous context: {conversation_context}
 
@@ -89,7 +94,7 @@ Provide a concise, correct DeFi answer considering the context."""
         else:
             prompt = f"User asked: {user_query}\nProvide a concise, correct DeFi answer."
         
-        resp = _mini.invoke(prompt)
+        resp = query_model.invoke(prompt)
         answer = resp.content.strip()
         
         # Update session with this exchange
@@ -129,6 +134,7 @@ Provide a concise, correct DeFi answer considering the context."""
         db_context = "\n\n---\n".join([t for t in db_texts if t])
         
         # Build prompt with minimal context
+        query_model = _get_query_model()
         if conversation_context:
             refine_prompt = ChatPromptTemplate.from_template(
                 """Previous context: {conversation_context}
@@ -138,7 +144,7 @@ Database context: {db_context}
 
 Provide an improved, concise DeFi answer using the database context and considering the conversation."""
             )
-            refined = _mini.invoke(refine_prompt.format_messages(
+            refined = query_model.invoke(refine_prompt.format_messages(
                 query=user_query,
                 db_context=db_context or "(no context)",
                 conversation_context=conversation_context
@@ -153,7 +159,7 @@ Database context: {db_context}
 
 Final improved answer:"""
             )
-            refined = _mini.invoke(refine_prompt.format_messages(
+            refined = query_model.invoke(refine_prompt.format_messages(
                 query=user_query, 
                 db_context=db_context or "(no context)"
             ))
@@ -173,6 +179,7 @@ Final improved answer:"""
         )
 
     # --- Low confidence - LLM fallback with smart context
+    query_model = _get_query_model()
     if conversation_context:
         fallback_prompt = ChatPromptTemplate.from_template(
             """Previous context: {conversation_context}
@@ -181,7 +188,7 @@ Current question: {query}
 
 Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question."""
         )
-        out = _mini.invoke(fallback_prompt.format_messages(
+        out = query_model.invoke(fallback_prompt.format_messages(
             query=user_query,
             conversation_context=conversation_context
         ))
@@ -190,7 +197,7 @@ Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question.
             """The user asked: {query}
 Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question."""
         )
-        out = _mini.invoke(fallback_prompt.format_messages(query=user_query))
+        out = query_model.invoke(fallback_prompt.format_messages(query=user_query))
     
     answer = out.content.strip()
     

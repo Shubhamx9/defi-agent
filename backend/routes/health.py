@@ -90,3 +90,47 @@ def readiness_check():
 def liveness_check():
     """Kubernetes liveness probe endpoint."""
     return {"status": "alive"}
+
+@router.get("/models")
+def model_status():
+    """Check status of AI models and get recommendations."""
+    from backend.utils.model_selector import (
+        get_model_info, 
+        recommend_model_for_task, 
+        get_upgrade_info,
+        is_model_available,
+        get_current_system_info,
+        calculate_cost_savings
+    )
+    from backend.config.settings import settings
+    
+    current_models = {
+        "intent": settings.INTENT_MODEL,
+        "query": settings.QUERY_MODEL,
+        "action": settings.ACTION_MODEL
+    }
+    
+    model_status = {}
+    for task, model in current_models.items():
+        model_status[task] = {
+            "current_model": model,
+            "available": "not_tested",  # Don't test availability to avoid API calls
+            "info": get_model_info(model),
+            "recommended_cost": recommend_model_for_task(task, "cost"),
+            "recommended_speed": recommend_model_for_task(task, "speed"),
+            "recommended_capability": recommend_model_for_task(task, "capability")
+        }
+    
+    # Get current system info and analysis
+    system_info = get_current_system_info()
+    upgrade_status = get_upgrade_info()
+    cost_analysis = calculate_cost_savings()
+    
+    return {
+        "current_system": system_info,
+        "current_models": model_status,
+        "system_available": upgrade_status["available"],
+        "cost_analysis": cost_analysis,
+        "recommended_config": upgrade_status["recommended_config"],
+        "upgrade_benefits": upgrade_status["upgrade_instructions"]
+    }

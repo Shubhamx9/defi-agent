@@ -1,14 +1,16 @@
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langsmith import traceable
 from backend.models.schemas import IntentType, IntentClassificationResult
+from backend.utils.model_selector import get_intent_model
 from typing import Union
+import logging
 
-# Instantiate once (saves time & cost)
-_intent_llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    temperature=0
-)
+logger = logging.getLogger(__name__)
+
+# Get model instance through model manager
+def _get_intent_model():
+    """Get intent classification model with fallback handling."""
+    return get_intent_model()
 
 _intent_prompt = ChatPromptTemplate.from_template(
     """Classify the user's message into exactly one of:
@@ -53,8 +55,9 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
     
     try:
         # Run the model with timeout protection
+        intent_model = _get_intent_model()
         msg = _intent_prompt.format_messages(query=query.strip())
-        out = _intent_llm.invoke(msg)
+        out = intent_model.invoke(msg)
         
         if not out or not out.content:
             logger.warning("Empty response from intent classification model")
