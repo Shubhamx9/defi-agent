@@ -2,10 +2,13 @@ fastapi
 uvicorn
 langchain
 langsmith
-pinecone-client
+pinecone
 openai
-pydantic
+pydantic-settings
 requests
 python-dotenv
 redis
 pytest
+starlette
+sentence-transformers
+tqdm

@@ -1,20 +1,30 @@
-# Logging setup
 import logging
 import sys
+from langchain.callbacks.manager import get_openai_callback
 
 def setup_logger():
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger("defi_assistant")
+    logger.setLevel(logging.DEBUG)
 
-    handler = logging.StreamHandler(sys.stdout)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+
     formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    console_handler.setFormatter(formatter)
 
-    # Silence overly verbose logs from libraries
-    logging.getLogger("uvicorn").setLevel(logging.WARNING)
-    logging.getLogger("langchain").setLevel(logging.WARNING)
+    if not logger.handlers:
+        logger.addHandler(console_handler)
 
     return logger
+
+
+def log_with_trace(logger, message, level="info"):
+    """Log to console and LangSmith trace if available"""
+    try:
+        with get_openai_callback() as cb:
+            getattr(logger, level)(message)
+            # If needed, cb.total_tokens / cb.prompt_tokens can be accessed here
+    except Exception:
+        getattr(logger, level)(message)
