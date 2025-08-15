@@ -22,7 +22,7 @@ if settings.USE_GEMINI:
     )
 else:
     # Use paid GPT-5 models
-    from backend.utils.model_manager import (
+    from backend.utils.gpt_manager import (
         get_model_instance,
         get_intent_model,
         get_query_model,

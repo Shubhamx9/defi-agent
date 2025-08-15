@@ -44,7 +44,8 @@ class TokenSymbol(str, Enum):
 class UserQuery(BaseModel):
     """Schema for user query requests."""
     query: str = Field(..., min_length=1, max_length=1000, description="User's query text")
-    session_id: Optional[str] = Field(None, description="Optional session ID for context")
+    session_id: Optional[str] = Field(None, description="Auto-generated session ID (optional for new sessions)")
+    new_chat: Optional[bool] = Field(False, description="Set to true to force new session creation")
     
     @validator('query')
     def validate_query(cls, v):
@@ -88,6 +89,162 @@ class ActionDetails(BaseModel):
             except (ValueError, TypeError):
                 raise ValueError('Amount must be a valid number')
         return v
+    
+    def get_completion_status(self) -> Dict[str, Any]:
+        """Analyze transaction readiness and return completion status."""
+        required_fields = self._get_required_fields()
+        optional_fields = self._get_optional_fields()
+        
+        missing_required = []
+        missing_optional = []
+        
+        # Check required fields
+        for field in required_fields:
+            if getattr(self, field) is None:
+                missing_required.append(field)
+        
+        # Check optional fields
+        for field in optional_fields:
+            if getattr(self, field) is None:
+                missing_optional.append(field)
+        
+        is_ready = len(missing_required) == 0
+        completion_percentage = self._calculate_completion_percentage()
+        
+        return {
+            "is_ready_for_execution": is_ready,
+            "completion_percentage": completion_percentage,
+            "missing_required": missing_required,
+            "missing_optional": missing_optional,
+            "next_questions": self._generate_next_questions(missing_required),
+            "confirmation_message": self._generate_confirmation_message() if is_ready else None,
+            "risk_warnings": self._get_risk_warnings(),
+            "estimated_gas": self._estimate_gas_cost()
+        }
+    
+    def _get_required_fields(self) -> List[str]:
+        """Get required fields based on action type."""
+        if not self.action:
+            return ["action"]
+        
+        base_required = ["action", "amount"]
+        
+        action_requirements = {
+            DeFiAction.SWAP: ["token_in", "token_out", "protocol"],
+            DeFiAction.DEPOSIT: ["token_in", "protocol"],
+            DeFiAction.WITHDRAW: ["token_in", "protocol"],
+            DeFiAction.STAKE: ["token_in", "protocol"],
+            DeFiAction.UNSTAKE: ["token_in", "protocol"],
+            DeFiAction.BORROW: ["token_out", "protocol"],
+            DeFiAction.LEND: ["token_in", "protocol"],
+            DeFiAction.CLAIM_REWARDS: ["protocol"]
+        }
+        
+        specific_requirements = action_requirements.get(self.action, [])
+        return base_required + specific_requirements
+    
+    def _get_optional_fields(self) -> List[str]:
+        """Get optional fields that improve transaction quality."""
+        return ["slippage", "deadline", "gas_price"]
+    
+    def _calculate_completion_percentage(self) -> int:
+        """Calculate completion percentage based on filled fields."""
+        required_fields = self._get_required_fields()
+        optional_fields = self._get_optional_fields()
+        
+        total_fields = len(required_fields) + len(optional_fields)
+        filled_fields = 0
+        
+        for field in required_fields + optional_fields:
+            if getattr(self, field) is not None:
+                filled_fields += 1
+        
+        return int((filled_fields / total_fields) * 100) if total_fields > 0 else 0
+    
+    def _generate_next_questions(self, missing_required: List[str]) -> List[str]:
+        """Generate user-friendly questions for missing information."""
+        questions = []
+        
+        question_map = {
+            "action": "What DeFi action would you like to perform? (swap, deposit, stake, etc.)",
+            "amount": "How much would you like to transact?",
+            "token_in": "Which token would you like to use?",
+            "token_out": "Which token would you like to receive?",
+            "protocol": "Which DeFi protocol would you prefer? (Uniswap, Aave, Compound, etc.)",
+            "slippage": "What slippage tolerance would you like? (default: 0.5%)",
+            "deadline": "Transaction deadline in minutes? (default: 20 minutes)"
+        }
+        
+        for field in missing_required:
+            if field in question_map:
+                questions.append(question_map[field])
+        
+        return questions
+    
+    def _generate_confirmation_message(self) -> str:
+        """Generate confirmation message for ready transactions."""
+        if not self.action:
+            return "Transaction details incomplete"
+        
+        action_messages = {
+            DeFiAction.SWAP: f"Swap {self.amount} {self.token_in} for {self.token_out} on {self.protocol}",
+            DeFiAction.DEPOSIT: f"Deposit {self.amount} {self.token_in} to {self.protocol}",
+            DeFiAction.WITHDRAW: f"Withdraw {self.amount} {self.token_in} from {self.protocol}",
+            DeFiAction.STAKE: f"Stake {self.amount} {self.token_in} on {self.protocol}",
+            DeFiAction.UNSTAKE: f"Unstake {self.amount} {self.token_in} from {self.protocol}",
+            DeFiAction.BORROW: f"Borrow {self.amount} {self.token_out} from {self.protocol}",
+            DeFiAction.LEND: f"Lend {self.amount} {self.token_in} to {self.protocol}",
+            DeFiAction.CLAIM_REWARDS: f"Claim rewards from {self.protocol}"
+        }
+        
+        base_message = action_messages.get(self.action, f"Execute {self.action} transaction")
+        
+        # Add optional parameters
+        extras = []
+        if self.slippage:
+            extras.append(f"slippage: {self.slippage}%")
+        if self.deadline:
+            extras.append(f"deadline: {self.deadline}s")
+        
+        if extras:
+            base_message += f" ({', '.join(extras)})"
+        
+        return base_message
+    
+    def _get_risk_warnings(self) -> List[str]:
+        """Generate risk warnings based on transaction details."""
+        warnings = []
+        
+        if self.action == DeFiAction.SWAP and self.slippage and self.slippage > 5:
+            warnings.append("High slippage tolerance may result in significant price impact")
+        
+        if self.amount:
+            try:
+                amount_val = float(self.amount)
+                if amount_val > 10000:  # Large transaction
+                    warnings.append("Large transaction amount - consider splitting into smaller trades")
+            except (ValueError, TypeError):
+                pass
+        
+        if not self.slippage and self.action == DeFiAction.SWAP:
+            warnings.append("No slippage tolerance set - transaction may fail in volatile markets")
+        
+        return warnings
+    
+    def _estimate_gas_cost(self) -> str:
+        """Estimate gas cost based on action type."""
+        gas_estimates = {
+            DeFiAction.SWAP: "~150,000 gas (~$15-30)",
+            DeFiAction.DEPOSIT: "~200,000 gas (~$20-40)",
+            DeFiAction.WITHDRAW: "~180,000 gas (~$18-35)",
+            DeFiAction.STAKE: "~250,000 gas (~$25-50)",
+            DeFiAction.UNSTAKE: "~200,000 gas (~$20-40)",
+            DeFiAction.BORROW: "~300,000 gas (~$30-60)",
+            DeFiAction.LEND: "~250,000 gas (~$25-50)",
+            DeFiAction.CLAIM_REWARDS: "~100,000 gas (~$10-20)"
+        }
+        
+        return gas_estimates.get(self.action, "~200,000 gas (~$20-40)")
 
 
 class IntentClassificationResponse(BaseModel):
@@ -106,10 +263,24 @@ class GeneralQueryResponse(BaseModel):
     session_id: Optional[str] = Field(None, description="Session identifier")
 
 
+class TransactionReadiness(BaseModel):
+    """Schema for transaction readiness analysis."""
+    is_ready_for_execution: bool = Field(..., description="Whether transaction is ready to execute")
+    completion_percentage: int = Field(..., ge=0, le=100, description="Completion percentage")
+    readiness_level: str = Field(..., description="Readiness level for frontend")
+    missing_required: List[str] = Field(default_factory=list, description="Missing required fields")
+    next_questions: List[str] = Field(default_factory=list, description="Questions to ask user")
+    next_question_details: Optional[Dict[str, Any]] = Field(None, description="Detailed next question with suggestions")
+    user_guidance: Dict[str, Any] = Field(default_factory=dict, description="User guidance")
+    frontend_actions: Dict[str, Any] = Field(default_factory=dict, description="Frontend UI actions")
+    risk_warnings: List[str] = Field(default_factory=list, description="Risk warnings")
+    validation_errors: List[str] = Field(default_factory=list, description="Validation errors")
+
 class ActionRequestResponse(BaseModel):
     """Schema for action request response."""
     intent: IntentType = Field(default=IntentType.ACTION_REQUEST)
     action_details: ActionDetails = Field(..., description="Extracted action parameters")
+    transaction_readiness: TransactionReadiness = Field(..., description="Transaction readiness analysis")
     next_step: str = Field(..., description="Next step in the action flow")
     confirmation_required: bool = Field(default=True, description="Whether user confirmation is needed")
     estimated_gas: Optional[str] = Field(None, description="Estimated gas cost")
@@ -135,6 +306,7 @@ class QueryResponse(BaseModel):
     
     # Action request fields
     action_details: Optional[ActionDetails] = Field(None, description="Extracted action parameters")
+    transaction_readiness: Optional[TransactionReadiness] = Field(None, description="Transaction readiness analysis")
     next_step: Optional[str] = Field(None, description="Next step in action flow")
     confirmation_required: Optional[bool] = Field(None, description="Whether confirmation is needed")
     estimated_gas: Optional[str] = Field(None, description="Estimated gas cost")

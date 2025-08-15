@@ -398,16 +398,34 @@ spec:
 
 ## 🔒 Security Checklist
 
-- [ ] API keys stored in secrets management
+### Application Security
+- [ ] API keys stored in secrets management (never in code)
+- [ ] Debug mode disabled (`DEBUG=false`)
+- [ ] Rate limiting configured and tested
+- [ ] Input sanitization enabled for all endpoints
+- [ ] CORS properly configured with specific origins
+- [ ] Session security with secure UUID generation
+- [ ] Logging configured (no sensitive data exposure)
+- [ ] Error messages sanitized (no internal details)
+
+### Infrastructure Security
 - [ ] HTTPS enabled with valid certificates
-- [ ] Rate limiting configured
-- [ ] Input sanitization enabled
-- [ ] CORS properly configured
-- [ ] Debug mode disabled in production
-- [ ] Logging configured (no sensitive data)
+- [ ] Firewall rules configured
+- [ ] Database/Redis access restricted
+- [ ] Container running as non-root user
+- [ ] Resource limits set (CPU, memory)
 - [ ] Health checks implemented
-- [ ] Resource limits set
-- [ ] Network policies applied (K8s)
+- [ ] Network policies applied (Kubernetes)
+- [ ] Secrets rotation strategy in place
+
+### Team Integration Security
+- [ ] Frontend CORS origins whitelisted
+- [ ] API authentication strategy defined
+- [ ] Session sharing security between components
+- [ ] Transaction parameter validation
+- [ ] Audit logging for all actions
+
+For detailed security information, see [SECURITY.md](SECURITY.md)
 
 ## 🚨 Troubleshooting
 
@@ -456,15 +474,107 @@ MAX_CONVERSATION_HISTORY = 5
 MAX_TOKENS = 500
 ```
 
+## 👥 Team Development Setup
+
+### Multi-Component Development
+For teams working on frontend, backend, and blockchain components:
+
+#### Backend Development (This Repo)
+```bash
+# Backend team setup
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Start backend API
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### Frontend Integration
+```bash
+# Configure CORS for frontend development
+echo "ALLOWED_ORIGINS=[\"http://localhost:3000\",\"http://localhost:8501\"]" >> .env
+
+# Test frontend integration
+curl -X POST http://localhost:8000/query/start-session \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "frontend_test"}'
+```
+
+#### Blockchain Integration Testing
+```bash
+# Test transaction readiness endpoint
+curl -X POST http://localhost:8000/query/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "I want to swap 100 USDC for ETH on Uniswap with 0.5% slippage",
+    "session_id": "your_session_id"
+  }'
+
+# Should return transaction_ready: true when all parameters collected
+```
+
+### Team Deployment Strategy
+
+#### Development Environment
+```yaml
+# docker-compose.dev.yml
+version: '3.8'
+services:
+  backend-ai:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8080"]
+    
+  frontend:
+    # Frontend team's container
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-ai
+      
+  blockchain:
+    # Blockchain team's container  
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend-ai
+```
+
+#### Production Deployment
+```bash
+# Coordinated deployment
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f frontend-deployment.yaml  
+kubectl apply -f blockchain-deployment.yaml
+
+# Verify all components
+kubectl get pods -l app=defi-ai-system
+```
+
 ## 📞 Support
 
-For deployment issues:
-1. Check the health endpoints first
-2. Review application logs
-3. Verify all environment variables
-4. Test external service connectivity
-5. Create an issue with deployment details
+### For Deployment Issues
+1. Check the health endpoints first: `GET /health/detailed`
+2. Review application logs: `kubectl logs -f deployment/defi-ai-assistant`
+3. Verify all environment variables are set
+4. Test external service connectivity (Redis, Pinecone, AI APIs)
+5. Check team integration points (CORS, session sharing)
+
+### Team Coordination
+- **Backend Issues**: Check this repository's issues
+- **Integration Issues**: Coordinate through team communication channels
+- **Security Concerns**: Follow [SECURITY.md](SECURITY.md) reporting procedures
+
+### Contact Information
+- **Backend Team**: aayushkr646@gmail.com
+- **Project Repository**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Team Chat**: [Your team communication channel]
 
 ---
 
-**Happy Deploying! 🚀**
+**Happy Team Deploying! 🚀**

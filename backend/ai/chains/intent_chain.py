@@ -13,14 +13,13 @@ def _get_intent_model():
     return get_intent_model()
 
 _intent_prompt = ChatPromptTemplate.from_template(
-    """Classify the user's message into exactly one of:
-- general_query  (informational/educational)
-- action_request (user wants to perform a DeFi action like deposit/withdraw/swap/borrow/lend/stake)
-- clarification  (ambiguous or missing details)
+    """Classify as:
+- general_query (info/education)
+- action_request (wants DeFi action)
+- clarification (unclear)
 
-Reply with ONLY the label.
-
-User: {query}"""
+User: {query}
+Label:"""
 )
 
 @traceable(name="DeFi Intent Classification")

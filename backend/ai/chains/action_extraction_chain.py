@@ -14,22 +14,18 @@ def _get_action_model():
     return get_action_model()
 
 _action_prompt = ChatPromptTemplate.from_template(
-    """Extract structured DeFi action details from the user's request.
-Return STRICT JSON only (no prose) with keys:
-- action: one of ["deposit","withdraw","swap","stake","borrow","lend","unstake","claim_rewards"]
-- amount: number or null (numeric amount only, no currency symbol)
-- asset: string or null
-- protocol: string or null
-- chain: string or null
-- apy_min: number or null
-- apy_max: number or null
-- slippage: number or null
-- notes: string or null
-- recipient: string or null
-- duration: number or null
+    """Current: {current_state}
+User: {query}
 
-If a value is not specified, use null.
-User: {query}"""
+Extract JSON only:
+- action: ["deposit","withdraw","swap","stake","borrow","lend","unstake","claim_rewards"] or null
+- amount: number or null
+- token_in: string or null  
+- token_out: string or null
+- protocol: string or null
+- slippage: number or null
+
+Only extract info from current message. Return JSON only."""
 )
 
 SESSION_TTL = 300  # 5 minutes
@@ -38,6 +34,31 @@ SESSION_TTL = 300  # 5 minutes
 def _get_default_action_state() -> ActionExtractionResult:
     """Get default action state with proper schema."""
     return ActionExtractionResult()
+
+def _format_current_state(session_state: ActionExtractionResult) -> str:
+    """Format current transaction state for AI context."""
+    state_dict = session_state.dict()
+    filled_fields = {k: v for k, v in state_dict.items() if v is not None}
+    
+    if not filled_fields:
+        return "No transaction details collected yet."
+    
+    # Create human-readable summary
+    summary_parts = []
+    if filled_fields.get("action"):
+        summary_parts.append(f"Action: {filled_fields['action']}")
+    if filled_fields.get("amount"):
+        summary_parts.append(f"Amount: {filled_fields['amount']}")
+    if filled_fields.get("token_in"):
+        summary_parts.append(f"From token: {filled_fields['token_in']}")
+    if filled_fields.get("token_out"):
+        summary_parts.append(f"To token: {filled_fields['token_out']}")
+    if filled_fields.get("protocol"):
+        summary_parts.append(f"Protocol: {filled_fields['protocol']}")
+    if filled_fields.get("slippage"):
+        summary_parts.append(f"Slippage: {filled_fields['slippage']}%")
+    
+    return "Current transaction: " + ", ".join(summary_parts)
 
 
 def _merge_action_results(old: ActionExtractionResult, new: ActionExtractionResult) -> ActionExtractionResult:
@@ -71,9 +92,16 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
     else:
         session_state = _get_default_action_state()
 
-    # Step 2: Extract new details
+    # Step 2: Extract new details with context awareness
     action_model = _get_action_model()
-    msg = _action_prompt.format_messages(query=user_query)
+    
+    # Prepare current state for AI context
+    current_state_summary = _format_current_state(session_state)
+    
+    msg = _action_prompt.format_messages(
+        query=user_query,
+        current_state=current_state_summary
+    )
     raw_output = action_model.invoke(msg).content.strip()
 
     try:

@@ -3,9 +3,9 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.schema import Document
 from backend.utils.embedding import get_embedding
 from backend.utils.vector_db import query_vector_db
-from backend.utils.cache import get_cached_response, set_cached_response
 from backend.models.schemas import QueryChainResult, SessionData, VectorMatch
 from backend.utils.model_selector import get_query_model
+from backend.utils.session_manager import SessionManager
 from langsmith import traceable
 import json
 import time
@@ -17,29 +17,19 @@ def _get_query_model():
     """Get query processing model with fallback handling."""
     return get_query_model()
 
-# ---------- Session Helpers (Redis) ----------
-SESSION_TTL = 300  # seconds
-
-def _get_session_key(user_id: str) -> str:
-    return f"session:{user_id}"
-
-def get_user_session(user_id: str) -> SessionData:
-    """Get user session data with proper schema validation."""
-    raw = get_cached_response(_get_session_key(user_id))
-    if raw:
-        try:
-            data = json.loads(raw)
-            return SessionData(user_id=user_id, **data)
-        except (json.JSONDecodeError, ValueError):
-            # Return default session if corrupted
-            pass
+# ---------- Session Helpers (Using Session Manager) ----------
+def get_user_session(session_id: str) -> SessionData:
+    """Get user session data using the session manager."""
+    session_data = SessionManager.get_session(session_id)
+    if session_data:
+        return session_data
     
-    return SessionData(user_id=user_id)
+    # Return default session if not found
+    return SessionData(user_id=session_id)
 
-def update_user_session(user_id: str, session_data: SessionData):
-    """Update user session with schema validation."""
-    session_dict = session_data.dict(exclude={'user_id'})
-    set_cached_response(_get_session_key(user_id), json.dumps(session_dict), ttl=SESSION_TTL)
+def update_user_session(session_id: str, session_data: SessionData, ip_address: str = None):
+    """Update user session using the session manager."""
+    SessionManager.update_session(session_id, session_data, ip_address)
 
 # ---------- Internal Helpers ----------
 def _convert_matches_to_schema(matches) -> List[VectorMatch]:
@@ -63,7 +53,7 @@ def _best_text(matches: List[VectorMatch]) -> str:
     return top_metadata.get("response") or top_metadata.get("text") or ""
 
 @traceable(name="DeFi Query Chain")
-def run_query_chain(user_id: str, user_query: str) -> QueryChainResult:
+def run_query_chain(session_id: str, user_query: str, ip_address: str = None) -> QueryChainResult:
     """
     Cost-efficient conversational query chain with smart context usage:
       - >= 0.98 → direct DB answer (no LLM cost)
@@ -71,7 +61,7 @@ def run_query_chain(user_id: str, user_query: str) -> QueryChainResult:
       - < 0.90 → LLM fallback + context only for follow-ups
     """
     # Get session data for conversation context
-    session_data = get_user_session(user_id)
+    session_data = get_user_session(session_id)
     
     # Vector search first (always do this - it's cheap)
     emb = get_embedding(user_query)
@@ -100,7 +90,7 @@ Provide a concise, correct DeFi answer considering the context."""
         # Update session with this exchange
         from backend.models.schemas import IntentType
         session_data.add_turn(user_query, answer, IntentType.GENERAL_QUERY, 0.0, "llm_fallback")
-        update_user_session(user_id, session_data)
+        update_user_session(session_id, session_data, ip_address)
         
         return QueryChainResult(
             source="llm_fallback",
@@ -137,31 +127,27 @@ Provide a concise, correct DeFi answer considering the context."""
         query_model = _get_query_model()
         if conversation_context:
             refine_prompt = ChatPromptTemplate.from_template(
-                """Previous context: {conversation_context}
+                """Context: {conversation_context}
+Question: {query}
+Data: {db_context}
 
-Current question: {query}
-Database context: {db_context}
-
-Provide an improved, concise DeFi answer using the database context and considering the conversation."""
+Concise DeFi answer:"""
             )
             refined = query_model.invoke(refine_prompt.format_messages(
                 query=user_query,
-                db_context=db_context or "(no context)",
+                db_context=db_context or "none",
                 conversation_context=conversation_context
             ))
         else:
             refine_prompt = ChatPromptTemplate.from_template(
-                """Improve and complete the DeFi answer using the database context.
-Keep it accurate; do not invent facts. Be concise.
+                """Question: {query}
+Data: {db_context}
 
-User: {query}
-Database context: {db_context}
-
-Final improved answer:"""
+Concise answer:"""
             )
             refined = query_model.invoke(refine_prompt.format_messages(
                 query=user_query, 
-                db_context=db_context or "(no context)"
+                db_context=db_context or "none"
             ))
         
         answer = refined.content.strip()
@@ -182,11 +168,10 @@ Final improved answer:"""
     query_model = _get_query_model()
     if conversation_context:
         fallback_prompt = ChatPromptTemplate.from_template(
-            """Previous context: {conversation_context}
+            """Context: {conversation_context}
+Question: {query}
 
-Current question: {query}
-
-Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question."""
+Concise DeFi answer or clarifying question:"""
         )
         out = query_model.invoke(fallback_prompt.format_messages(
             query=user_query,
@@ -194,8 +179,8 @@ Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question.
         ))
     else:
         fallback_prompt = ChatPromptTemplate.from_template(
-            """The user asked: {query}
-Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question."""
+            """Question: {query}
+Concise DeFi answer or clarifying question:"""
         )
         out = query_model.invoke(fallback_prompt.format_messages(query=user_query))
     
@@ -214,10 +199,10 @@ Provide a concise, correct DeFi answer. If ambiguous, ask 1 clarifying question.
     )
 
 
-# Backward compatibility function
-def run_query_chain_dict(user_id: str, user_query: str) -> Dict[str, Any]:
+# Backward compatibility function with IP tracking
+def run_query_chain_dict(session_id: str, user_query: str, ip_address: str = None) -> Dict[str, Any]:
     """Backward compatibility wrapper that returns dict instead of schema."""
-    result = run_query_chain(user_id, user_query)
+    result = run_query_chain(session_id, user_query, ip_address)
     return {
         "source": result.source,
         "confidence": result.confidence,

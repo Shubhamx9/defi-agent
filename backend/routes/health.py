@@ -91,6 +91,12 @@ def liveness_check():
     """Kubernetes liveness probe endpoint."""
     return {"status": "alive"}
 
+@router.get("/sessions")
+def session_stats():
+    """Get session statistics for monitoring."""
+    from backend.utils.session_manager import SessionManager
+    return SessionManager.get_session_stats()
+
 @router.get("/models")
 def model_status():
     """Check status of AI models and get recommendations."""
