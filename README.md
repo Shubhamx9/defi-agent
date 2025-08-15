@@ -10,7 +10,7 @@ A **cost-efficient, production-ready** AI assistant for Decentralized Finance (D
 ## 🎯 Project Overview
 
 **Type**: Hackathon Project  
-**Owner**: Aayush, Adesh
+**Owner**: Aayush  
 **Domain**: Decentralized Finance (DeFi)  
 **Status**: Production-Ready ✅
 
