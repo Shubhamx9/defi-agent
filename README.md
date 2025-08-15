@@ -11,7 +11,7 @@ A **cost-efficient, production-ready** AI assistant for Decentralized Finance (D
 ## 🎯 Project Overview
 
 **Type**: Team Hackathon Project  
-**Team**: Backend AI System (Aayush, Adesh) + Frontend & Blockchain Integration (Teammates)  
+**Team**: Backend AI System (Aayush) + Frontend & Blockchain Integration (Shubham and Adesh)  
 **Domain**: Decentralized Finance (DeFi)  
 **Status**: Production-Ready Backend ✅
 
