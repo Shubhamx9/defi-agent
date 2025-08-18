@@ -214,5 +214,5 @@ __marimo__/
 #MINE
 vector_db_queries.jsonl
 .aiexclude
-fix_imports
+fix_imports.py
 mock_mode
