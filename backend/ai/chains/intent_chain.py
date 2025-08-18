@@ -4,6 +4,8 @@ from backend.models.schemas import IntentType, IntentClassificationResult
 from backend.utils.model_selector import get_intent_model
 from typing import Union
 import logging
+from backend.utils.embedding import get_embedding
+from backend.utils.vector_db import query_vector_db
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ def _get_intent_model():
 _intent_prompt = ChatPromptTemplate.from_template(
     """Classify as:
 - general_query (info/education)
-- action_request (wants DeFi action)
+- action_request (wants DeFi action or Information about current APY)
 - clarification (unclear)
 
 User: {query}

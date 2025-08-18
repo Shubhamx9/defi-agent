@@ -4,15 +4,15 @@ Redis cache with connection pooling and error handling.
 import redis
 import logging
 from typing import Optional
-from backend.config.settings import settings
+from backend.config.settings import redis_settings
 
 logger = logging.getLogger(__name__)
 
 # Connection pool for better performance
 _redis_pool = redis.ConnectionPool(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    password=settings.REDIS_PASSWORD,
+    host=redis_settings.REDIS_HOST,
+    port=redis_settings.REDIS_PORT,
+    password=redis_settings.REDIS_PASSWORD,
     decode_responses=True,
     max_connections=20,
     retry_on_timeout=True,
@@ -50,10 +50,11 @@ def set_cached_response(key: str, value: str, ttl: int = 3600) -> bool:
         return False
 
 def health_check() -> bool:
-    """Check Redis connection health."""
+    """Check if Redis is alive. Never crash."""
     try:
         r = get_redis_client()
         r.ping()
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Redis health check failed: {e}")
         return False

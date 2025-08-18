@@ -336,13 +336,16 @@ class ErrorResponse(BaseModel):
     request_id: Optional[str] = Field(None, description="Request identifier for debugging")
 
 
-# Health Check Schema
+# Detailed Health Check Schema
 class HealthResponse(BaseModel):
-    """Schema for health check response."""
-    status: str = Field(default="ok", description="Service status")
-    message: str = Field(..., description="Status message")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Health check timestamp")
-    version: str = Field(default="1.0.0", description="API version")
+    status: str
+    timestamp: float
+    services: Dict[str, Dict[str, Any]]
+    response_time_ms: float
+    demo_mode: bool | None = None
+    note: str | None = None
+    mode: str | None = None
+
 
 
 # Internal Chain Schemas

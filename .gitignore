@@ -209,4 +209,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+#MINE
 vector_db_queries.jsonl
+.aiexclude
+fix_imports
+mock_mode

@@ -38,10 +38,20 @@ def get_embedding(text: str) -> List[float]:
         logger.error(f"Failed to generate embedding for text: {e}")
         raise RuntimeError(f"Embedding generation failed: {e}")
 
+import logging
+from backend.utils.embedding import get_embedding_model
+
+logger = logging.getLogger(__name__)
+
 def health_check() -> bool:
-    """Check if embedding model is available."""
+    """Check if embedding model is available. Never crash."""
     try:
-        get_embedding_model()
+        model = get_embedding_model()
+        if model is None:
+            return False
+        # model.embed_query("test")  
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Embedding health check failed: {e}")
         return False
+

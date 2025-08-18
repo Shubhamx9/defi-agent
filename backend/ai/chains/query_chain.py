@@ -104,12 +104,9 @@ Provide a concise, correct DeFi answer considering the context."""
     # --- High confidence - Direct DB answer (NO LLM COST!)
     if score >= 0.98:
         answer = _best_text(matches)
-        
-        # Update session with this exchange
         from backend.models.schemas import IntentType
         session_data.add_turn(user_query, answer, IntentType.GENERAL_QUERY, score, "vector_db")
-        update_user_session(user_id, session_data)
-        
+        update_user_session(session_id, session_data, ip_address)
         return QueryChainResult(
             source="vector_db",
             confidence=score,
@@ -122,8 +119,6 @@ Provide a concise, correct DeFi answer considering the context."""
         db_texts = [m.metadata.get("response") or m.metadata.get("text") or "" 
                    for m in matches if m.metadata]
         db_context = "\n\n---\n".join([t for t in db_texts if t])
-        
-        # Build prompt with minimal context
         query_model = _get_query_model()
         if conversation_context:
             refine_prompt = ChatPromptTemplate.from_template(
@@ -149,14 +144,10 @@ Concise answer:"""
                 query=user_query, 
                 db_context=db_context or "none"
             ))
-        
         answer = refined.content.strip()
-        
-        # Update session with this exchange
         from backend.models.schemas import IntentType
         session_data.add_turn(user_query, answer, IntentType.GENERAL_QUERY, score, "vector_db + mini_llm")
-        update_user_session(user_id, session_data)
-        
+        update_user_session(session_id, session_data, ip_address)
         return QueryChainResult(
             source="vector_db + mini_llm",
             confidence=score,
@@ -189,7 +180,7 @@ Concise DeFi answer or clarifying question:"""
     # Update session with this exchange
     from backend.models.schemas import IntentType
     session_data.add_turn(user_query, answer, IntentType.GENERAL_QUERY, score, "llm_fallback")
-    update_user_session(user_id, session_data)
+    update_user_session(session_id, session_data, ip_address)
     
     return QueryChainResult(
         source="llm_fallback",

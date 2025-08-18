@@ -9,24 +9,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def _get_action_model():
-    """Get action extraction model with fallback handling."""
-    return get_action_model()
-
+# Prompt for extracting structured action info
 _action_prompt = ChatPromptTemplate.from_template(
     """Current: {current_state}
 User: {query}
 
-Extract JSON only:
-- action: ["deposit","withdraw","swap","stake","borrow","lend","unstake","claim_rewards"] or null
-- amount: number or null
-- token_in: string or null  
-- token_out: string or null
-- protocol: string or null
-- slippage: number or null
+Extract JSON only. Do NOT add any text outside JSON.
 
-Only extract info from current message. Return JSON only."""
+- action: one of ["deposit","withdraw","swap","stake","borrow","lend","unstake","claim_rewards"] or null
+- amount: numeric value only, or null
+- token_in: token symbol (e.g., "ETH", "USDC") or null  
+- token_out: token symbol or null
+- protocol: string or null
+- slippage: numeric value or null
+
+Only extract info from this message. Do not infer from prior context. Return strictly valid JSON."""
 )
+
 
 SESSION_TTL = 300  # 5 minutes
 
@@ -34,6 +33,7 @@ SESSION_TTL = 300  # 5 minutes
 def _get_default_action_state() -> ActionExtractionResult:
     """Get default action state with proper schema."""
     return ActionExtractionResult()
+
 
 def _format_current_state(session_state: ActionExtractionResult) -> str:
     """Format current transaction state for AI context."""
@@ -43,7 +43,6 @@ def _format_current_state(session_state: ActionExtractionResult) -> str:
     if not filled_fields:
         return "No transaction details collected yet."
     
-    # Create human-readable summary
     summary_parts = []
     if filled_fields.get("action"):
         summary_parts.append(f"Action: {filled_fields['action']}")
@@ -93,9 +92,8 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
         session_state = _get_default_action_state()
 
     # Step 2: Extract new details with context awareness
-    action_model = _get_action_model()
+    action_model = get_action_model("action")   # 🔑 now uses GPT or Mistral depending on USE_GPT
     
-    # Prepare current state for AI context
     current_state_summary = _format_current_state(session_state)
     
     msg = _action_prompt.format_messages(
@@ -113,37 +111,32 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
         except Exception:
             new_data = {}
 
-    # Step 3: Create new result with validation
+    # Step 3: Validate & map
     try:
-        # Map action string to enum if present
         if "action" in new_data and new_data["action"]:
             try:
                 new_data["action"] = DeFiAction(new_data["action"].lower())
             except ValueError:
-                # Invalid action, keep as None
                 new_data["action"] = None
         
         new_result = ActionExtractionResult(**new_data)
     except ValueError:
-        # If validation fails, return current session state
         new_result = _get_default_action_state()
 
     # Step 4: Merge with session state
     final_result = _merge_action_results(session_state, new_result)
 
-    # Step 5: Save updated session state back to Redis with TTL
+    # Step 5: Save back to Redis with TTL
     set_cached_response(cache_key, json.dumps(final_result.dict()), ttl=SESSION_TTL)
 
     return final_result
 
 
-# Backward compatibility function
 def extract_action_details_dict(user_query: str, user_id: str) -> Dict[str, Any]:
     """Backward compatibility wrapper that returns dict instead of schema."""
     result = extract_action_details(user_query, user_id)
     result_dict = result.dict()
     
-    # Convert enum back to string for backward compatibility
     if result_dict.get("action"):
         result_dict["action"] = result_dict["action"].value
     

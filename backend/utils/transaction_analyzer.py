@@ -256,3 +256,43 @@ class TransactionAnalyzer:
         recommendations.append("Start with smaller amounts for new protocols")
         
         return recommendations
+
+def execute_demo_transaction(action_details: dict) -> dict:
+    """
+    Mock blockchain execution for demo purposes.
+    In production, this would interface with actual blockchain.
+    """
+    import time
+    import hashlib
+    
+    # Simulate transaction processing time
+    time.sleep(0.5)
+    
+    # Generate mock transaction hash
+    tx_data = f"{action_details.get('action', '')}{action_details.get('amount', '')}{time.time()}"
+    tx_hash = "0x" + hashlib.md5(tx_data.encode()).hexdigest()
+    
+    return {
+        "status": "success",
+        "transaction_hash": tx_hash,
+        "block_number": 18500000 + int(time.time()) % 1000,
+        "gas_used": action_details.get("estimated_gas", "21000"),
+        "gas_price": "20 gwei",
+        "confirmation_time": "~15 seconds",
+        "demo_mode": True,
+        "action_executed": action_details.get("action", "unknown"),
+        "protocol": action_details.get("protocol", "unknown"),
+        "timestamp": time.time()
+    }
+
+def get_transaction_status(tx_hash: str) -> dict:
+    """
+    Mock transaction status check for demo.
+    """
+    return {
+        "transaction_hash": tx_hash,
+        "status": "confirmed",
+        "confirmations": 12,
+        "block_number": 18500000 + int(time.time()) % 1000,
+        "demo_mode": True
+    }
