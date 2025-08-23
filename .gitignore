@@ -204,6 +204,7 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+.aiexclude
 
 # Marimo
 marimo/_static/
@@ -213,6 +214,5 @@ __marimo__/
 
 #MINE
 vector_db_queries.jsonl
-.aiexclude
-fix_imports.py
-mock_mode
+fix_imports
+logs

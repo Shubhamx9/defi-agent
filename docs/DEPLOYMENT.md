@@ -135,151 +135,159 @@ docker-compose up -d
 docker-compose logs -f defi-ai
 ```
 
-## ☸️ Kubernetes Deployment
+## 🚀 Production Docker Deployment
 
-### 1. Create Secrets
+### 1. Create Environment File
 ```bash
-kubectl create secret generic defi-ai-secrets \
-  --from-literal=openai-api-key=your-openai-key \
-  --from-literal=pinecone-api-key=your-pinecone-key \
-  --from-literal=langsmith-api-key=your-langsmith-key \
-  --from-literal=redis-password=your-redis-password
+# Create production environment file
+cat > .env.prod << EOF
+# AI System Configuration
+USE_GPT=true
+OPENAI_API_KEY=your-openai-key
+PINECONE_API_KEY=your-pinecone-key
+LANGSMITH_API_KEY=your-langsmith-key
+
+# Database Configuration
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=your-secure-redis-password
+
+# Security Configuration
+DEBUG=false
+ALLOWED_ORIGINS=["https://yourdomain.com"]
+RATE_LIMIT_PER_MINUTE=60
+RATE_LIMIT_PER_HOUR=1000
+
+# Application Configuration
+PINECONE_INDEX=defi-queries
+SESSION_TTL=300
+EOF
 ```
 
-### 2. Redis Deployment
+### 2. Production Docker Compose
 ```yaml
-# redis-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      containers:
-      - name: redis
-        image: redis:7-alpine
-        ports:
-        - containerPort: 6379
-        env:
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: defi-ai-secrets
-              key: redis-password
-        command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis-service
-spec:
-  selector:
-    app: redis
-  ports:
-  - port: 6379
-    targetPort: 6379
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - defi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  defi-ai:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.prod
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - defi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      defi-ai:
+        condition: service_healthy
+    networks:
+      - defi-network
+
+volumes:
+  redis_data:
+
+networks:
+  defi-network:
+    driver: bridge
 ```
 
-### 3. Application Deployment
-```yaml
-# defi-ai-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: defi-ai-assistant
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: defi-ai-assistant
-  template:
-    metadata:
-      labels:
-        app: defi-ai-assistant
-    spec:
-      containers:
-      - name: api
-        image: your-registry/defi-ai-assistant:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: REDIS_HOST
-          value: "redis-service"
-        - name: REDIS_PORT
-          value: "6379"
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: defi-ai-secrets
-              key: redis-password
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: defi-ai-secrets
-              key: openai-api-key
-        - name: PINECONE_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: defi-ai-secrets
-              key: pinecone-api-key
-        - name: LANGSMITH_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: defi-ai-secrets
-              key: langsmith-api-key
-        livenessProbe:
-          httpGet:
-            path: /health/live
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: defi-ai-service
-spec:
-  selector:
-    app: defi-ai-assistant
-  ports:
-  - port: 80
-    targetPort: 8000
-  type: LoadBalancer
+### 3. Production Dockerfile
+```dockerfile
+# Dockerfile.prod
+FROM python:3.9-slim
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY backend/ .
+
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health/live || exit 1
+
+# Run application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 ```
 
-### 4. Deploy to Kubernetes
+### 4. Deploy Production Stack
 ```bash
-# Apply deployments
-kubectl apply -f redis-deployment.yaml
-kubectl apply -f defi-ai-deployment.yaml
+# Build and deploy
+docker-compose -f docker-compose.prod.yml up -d
 
 # Check status
-kubectl get pods
-kubectl get services
+docker-compose -f docker-compose.prod.yml ps
 
-# Check logs
-kubectl logs -f deployment/defi-ai-assistant
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f defi-ai
+
+# Scale application
+docker-compose -f docker-compose.prod.yml up -d --scale defi-ai=3
 ```
 
 ## 🌐 Cloud Deployment Options
@@ -415,7 +423,7 @@ spec:
 - [ ] Container running as non-root user
 - [ ] Resource limits set (CPU, memory)
 - [ ] Health checks implemented
-- [ ] Network policies applied (Kubernetes)
+- [ ] Network security configured
 - [ ] Secrets rotation strategy in place
 
 ### Team Integration Security
@@ -437,7 +445,7 @@ For detailed security information, see [SECURITY.md](SECURITY.md)
 redis-cli -h $REDIS_HOST -p $REDIS_PORT ping
 
 # Check logs
-kubectl logs deployment/redis
+docker-compose logs redis
 ```
 
 **Pinecone Index Not Found**
@@ -454,7 +462,7 @@ curl http://localhost:8000/health/detailed
 
 # Monitor memory
 docker stats
-kubectl top pods
+docker-compose top
 ```
 
 ### Performance Tuning
@@ -548,33 +556,36 @@ services:
 #### Production Deployment
 ```bash
 # Coordinated deployment
-kubectl apply -f backend-deployment.yaml
-kubectl apply -f frontend-deployment.yaml  
-kubectl apply -f blockchain-deployment.yaml
+docker-compose -f docker-compose.team.yml up -d
 
 # Verify all components
-kubectl get pods -l app=defi-ai-system
+docker-compose -f docker-compose.team.yml ps
 ```
 
 ## 📞 Support
 
 ### For Deployment Issues
 1. Check the health endpoints first: `GET /health/detailed`
-2. Review application logs: `kubectl logs -f deployment/defi-ai-assistant`
+2. Review application logs: `docker-compose logs -f defi-ai`
 3. Verify all environment variables are set
 4. Test external service connectivity (Redis, Pinecone, AI APIs)
 5. Check team integration points (CORS, session sharing)
 
 ### Team Coordination
-- **Backend Issues**: Check this repository's issues
-- **Integration Issues**: Coordinate through team communication channels
+- **Backend Issues**: Check this repository's issues (Aayush Kumar)
+- **Frontend Integration**: Coordinate through team communication channels
+- **Blockchain Integration**: Coordinate transaction execution and parameter validation
 - **Security Concerns**: Follow [SECURITY.md](SECURITY.md) reporting procedures
 
-### Contact Information
-- **Backend Team**: aayushkr646@gmail.com
-- **Project Repository**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Team Chat**: [Your team communication channel]
+### Team Contact Information
+- **Backend Team (Aayush)**: aayushkr646@gmail.com
+- **Frontend Team**: [Contact Info]
+- **Blockchain Team**: [Contact Info]
+- **Project Repository**: [GitHub Issues](https://github.com/team-repo/issues)
+- **Team Communication**: [Discord/Slack/Teams channel]
 
 ---
 
 **Happy Team Deploying! 🚀**
+
+The backend is ready for team integration and production deployment. Coordinate with frontend and blockchain teams for complete system deployment.

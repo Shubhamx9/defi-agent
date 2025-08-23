@@ -91,11 +91,10 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
     else:
         session_state = _get_default_action_state()
 
+
     # Step 2: Extract new details with context awareness
     action_model = get_action_model("action")   # 🔑 now uses GPT or Mistral depending on USE_GPT
-    
     current_state_summary = _format_current_state(session_state)
-    
     msg = _action_prompt.format_messages(
         query=user_query,
         current_state=current_state_summary
@@ -111,6 +110,22 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
         except Exception:
             new_data = {}
 
+    # --- Patch: Robust protocol extraction ---
+    # List of known protocols (expand as needed)
+    KNOWN_PROTOCOLS = ["aave", "uniswap", "compound", "curve", "balancer", "sushiswap", "maker", "yearn", "1inch", "venus", "pancakeswap", "anchor"]
+    import re
+    # Search for protocol mentions in user_query
+    found_protocol = None
+    for proto in KNOWN_PROTOCOLS:
+        pattern = re.compile(rf"\\b{proto}\\b", re.IGNORECASE)
+        if pattern.search(user_query):
+            found_protocol = proto.upper() if proto != "1inch" else "1inch"
+            break
+
+    # If protocol not set by LLM, set it from found_protocol
+    if (not new_data.get("protocol")) and found_protocol:
+        new_data["protocol"] = found_protocol
+
     # Step 3: Validate & map
     try:
         if "action" in new_data and new_data["action"]:
@@ -118,7 +133,6 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
                 new_data["action"] = DeFiAction(new_data["action"].lower())
             except ValueError:
                 new_data["action"] = None
-        
         new_result = ActionExtractionResult(**new_data)
     except ValueError:
         new_result = _get_default_action_state()

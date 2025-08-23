@@ -1,5 +1,9 @@
 # Team Integration Guide 🤝
 
+**Backend Team**: Aayush Kumar  
+**Frontend Team**: [Team Members]  
+**Blockchain Team**: [Team Members]  
+
 Quick setup guide for frontend and blockchain teams to integrate with the DeFi AI Assistant backend.
 
 ## 🚀 Quick Start (5 minutes)
@@ -78,7 +82,7 @@ interface GeneralQueryResponse {
   answer: string;
   sources: string[];
   confidence: number;
-  ai_system: 'gemini' | 'gpt-5';
+  ai_system: 'gpt-5' | 'mistral';
 }
 ```
 
@@ -193,8 +197,8 @@ curl -X POST http://localhost:8000/query/ \
 - `GET /health/` - Basic health
 - `GET /health/detailed` - Full system status
 - `GET /health/models` - AI system info
-- `GET /health/ready` - Kubernetes readiness
-- `GET /health/live` - Kubernetes liveness
+- `GET /health/ready` - Application readiness
+- `GET /health/live` - Application liveness
 
 ### Performance Expectations
 - Health checks: <50ms
@@ -206,11 +210,12 @@ curl -X POST http://localhost:8000/query/ \
 
 ### Environment Variables
 ```bash
-# System Mode Selection
-USE_DEMO_MODE=true   # true = Demo Mode, false = Production Mode
+# AI System Selection
+USE_GPT=true         # true = OpenAI GPT-5, false = Local Mistral-7B
 
-# AI System Selection (Production Mode only)
-USE_GEMINI=true      # true = Free Gemini, false = Paid GPT-5
+# API Keys
+OPENAI_API_KEY=your_openai_key
+PINECONE_API_KEY=your_pinecone_key
 
 # CORS Origins (add your frontend URL)
 ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8080"]
@@ -220,21 +225,22 @@ RATE_LIMIT_PER_MINUTE=60
 RATE_LIMIT_PER_HOUR=1000
 ```
 
-### Mode Switching
+### AI System Switching
 ```bash
-# For reliable demo/testing (Recommended for development)
-USE_DEMO_MODE=true
+# For production with GPT-5 (Recommended)
+USE_GPT=true
 
-# For production with real APIs
-USE_DEMO_MODE=false
+# For cost-effective deployment with local Mistral
+USE_GPT=false
+# Requires Ollama with mistral:7b model
 ```
 
 ## 🎯 Demo Preparation
 
 ### Key Features to Showcase
-1. **Dual AI System**: Switch between Gemini (free) and GPT-5 (paid)
-2. **Transaction Intelligence**: Parameter accumulation and readiness tracking
-3. **Cost Optimization**: 65% cost reduction through smart routing
+1. **Flexible AI System**: GPT-5 for production or Mistral-7B for cost-effectiveness
+2. **Transaction Intelligence**: Complete parameter extraction and readiness tracking
+3. **Smart Processing**: Vector search with confidence-based AI refinement
 
 ### Demo Flow
 1. Start session
@@ -245,9 +251,11 @@ USE_DEMO_MODE=false
 
 ## 📞 Support
 
-### Backend Team Contact
-- **Email**: aayushkr646@gmail.com
-- **GitHub**: https://github.com/Aayush2005/defi-agent
+### Team Contacts
+- **Backend Team (Aayush)**: aayushkr646@gmail.com
+- **Frontend Team**: [Contact Info]
+- **Blockchain Team**: [Contact Info]
+- **Project Repository**: https://github.com/[team-repo]/defi-agent
 
 ### Quick Debug Commands
 ```bash
@@ -274,6 +282,6 @@ curl -X POST http://localhost:8000/query/start-session \
 
 ---
 
-**Ready to integrate! 🚀**
+**Ready for Team Integration! 🚀**
 
-Your backend is production-ready and waiting for frontend/blockchain integration. All APIs are documented and tested.
+The backend AI system is production-ready and provides clean APIs for seamless frontend and blockchain integration. All endpoints are documented, tested, and designed for team collaboration.

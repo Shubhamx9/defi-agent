@@ -111,11 +111,11 @@ Content-Type: application/json
     "DeFi Pulse Liquidity Guide"
   ],
   "confidence": 0.95,
-  "ai_system": "gemini",
+  "ai_system": "gpt-5",
   "cost_analysis": {
     "tokens_used": 245,
-    "estimated_cost": 0.0,
-    "model_used": "gemini-1.5-pro"
+    "estimated_cost": 0.0612,
+    "model_used": "gpt-5-mini"
   },
   "follow_up_suggestions": [
     "Would you like to know about impermanent loss?",
@@ -221,7 +221,7 @@ Content-Type: application/json
     "I want to borrow against my assets",
     "What is yield farming?"
   ],
-  "ai_system": "gemini",
+  "ai_system": "gpt-5",
   "cost_analysis": {
     "tokens_used": 89,
     "estimated_cost": 0.0
@@ -277,11 +277,11 @@ GET /health/detailed
     }
   },
   "ai_system": {
-    "active_system": "gemini",
+    "active_system": "gpt-5",
     "models": {
-      "intent": "gemini-1.5-flash",
-      "query": "gemini-1.5-pro",
-      "action": "gemini-1.5-flash"
+      "intent": "gpt-5-nano",
+      "query": "gpt-5-mini",
+      "action": "gpt-5-mini"
     },
     "cost_analysis": {
       "total_requests_today": 1247,
@@ -305,34 +305,35 @@ GET /health/models
 **Response:**
 ```json
 {
-  "active_system": "gemini",
+  "active_system": "gpt-5",
   "system_config": {
-    "use_gemini": true,
+    "use_gpt": true,
     "models": {
-      "intent_model": "gemini-1.5-flash",
-      "query_model": "gemini-1.5-pro",
-      "action_model": "gemini-1.5-flash"
+      "intent_model": "gpt-5-nano",
+      "query_model": "gpt-5-mini",
+      "action_model": "gpt-5-mini"
     }
   },
   "cost_info": {
-    "system_type": "free",
-    "rate_limits": {
-      "requests_per_minute": 15,
-      "requests_per_day": 1500
+    "system_type": "paid",
+    "pricing": {
+      "gpt-5-nano": "$0.001 per 1K tokens",
+      "gpt-5-mini": "$0.003 per 1K tokens",
+      "gpt-5": "$0.01 per 1K tokens"
     },
     "current_usage": {
-      "requests_today": 247,
-      "requests_this_minute": 3
+      "tokens_today": 15420,
+      "estimated_cost_today": "$0.47"
     }
   },
   "fallback_available": true
 }
 ```
 
-#### Kubernetes Probes
+#### Application Probes
 ```http
-GET /health/ready    # Readiness probe
-GET /health/live     # Liveness probe
+GET /health/ready    # Application readiness probe
+GET /health/live     # Application liveness probe
 ```
 
 ## Error Responses

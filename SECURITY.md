@@ -173,10 +173,10 @@ checkov -f docker-compose.yml
 - [ ] Monitoring and alerting configured
 
 #### Deployment Security
-- [ ] Secrets stored in secure secret management
+- [ ] Secrets stored in secure environment variables
 - [ ] Container images scanned for vulnerabilities
-- [ ] Network policies applied (Kubernetes)
-- [ ] Service mesh configured (if applicable)
+- [ ] Network security configured
+- [ ] Reverse proxy configured (if applicable)
 - [ ] Backup and disaster recovery tested
 - [ ] Incident response plan documented
 
@@ -198,30 +198,33 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health/live || exit 1
 ```
 
-#### Kubernetes Security
+#### Docker Compose Security
 ```yaml
-apiVersion: v1
-kind: Pod
-spec:
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 2000
-  containers:
-  - name: defi-ai
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-        - ALL
-    resources:
-      limits:
-        memory: "1Gi"
-        cpu: "500m"
-      requests:
-        memory: "512Mi"
-        cpu: "250m"
+version: '3.8'
+services:
+  defi-ai-assistant:
+    build: .
+    user: "1000:1000"  # Run as non-root user
+    read_only: true     # Read-only filesystem
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 ```
 
 ## 🚨 Incident Response
@@ -354,7 +357,7 @@ Currently not available, but under consideration for future implementation.
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
 - [FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)
-- [Container Security Best Practices](https://kubernetes.io/docs/concepts/security/)
+- [Docker Security Best Practices](https://docs.docker.com/develop/security-best-practices/)
 
 ## 📝 Security Updates
 

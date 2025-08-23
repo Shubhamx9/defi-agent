@@ -1,6 +1,7 @@
 from backend.utils.vector_db import query_vector_db, health_check
 from backend.utils.embedding import get_embedding
-
+from dotenv import load_dotenv
+load_dotenv()
 
 def main():
     print("=== Health Check ===")

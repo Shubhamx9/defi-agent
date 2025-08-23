@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from backend.utils.cache import health_check as redis_health
 from backend.utils.embedding import health_check as embedding_health
 from backend.utils.vector_db import health_check as pinecone_health
-from backend.utils.mock_mode import is_mock_mode, get_mode_info
 import time
 from datetime import datetime
 

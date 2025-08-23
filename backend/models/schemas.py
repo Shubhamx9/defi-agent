@@ -44,6 +44,7 @@ class TokenSymbol(str, Enum):
 class UserQuery(BaseModel):
     """Schema for user query requests."""
     query: str = Field(..., min_length=1, max_length=1000, description="User's query text")
+    user_id: Optional[str] = Field(None, description="User identifier")
     session_id: Optional[str] = Field(None, description="Auto-generated session ID (optional for new sessions)")
     new_chat: Optional[bool] = Field(False, description="Set to true to force new session creation")
     
@@ -362,6 +363,7 @@ class QueryChainResult(BaseModel):
     answer: str = Field(..., description="Generated answer")
     top_matches: List[VectorMatch] = Field(default_factory=list, description="Top vector matches")
     sources: Optional[List[str]] = Field(default_factory=list, description="Source references")
+    session_id: Optional[str] = Field(None, description="Session identifier")
 
 
 class ConversationTurn(BaseModel):
@@ -484,3 +486,8 @@ class ModelConfig(BaseModel):
     temperature: float = Field(default=0.0, ge=0, le=2, description="Model temperature")
     max_tokens: Optional[int] = Field(None, gt=0, description="Maximum tokens in response")
     timeout: int = Field(default=30, gt=0, description="Request timeout in seconds")
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str

@@ -13,9 +13,11 @@ load_dotenv()
 from backend.config.settings import langchain_settings, security_settings
 from backend.exception_handler import global_exception_handler
 from backend.logging_setup import setup_logger
+from backend.middleware.log_requests import log_requests
 from backend.middleware.langsmith_tracer import LangSmithTracerMiddleware
 from backend.models.schemas import HealthResponse
-from backend.middleware.logging_middleware import log_requests
+from backend.routes import auth
+
 
 
 # Logger setup
@@ -56,6 +58,7 @@ app.middleware("http")(log_requests)
 app.add_middleware(LangSmithTracerMiddleware)
 
 # Routes
+app.include_router(auth.router, prefix="/auth")
 app.include_router(query.router, prefix="/query")
 app.include_router(health.router)
 

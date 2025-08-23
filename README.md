@@ -1,37 +1,39 @@
 # DeFi AI Assistant 🚀
 
-A **cost-efficient, production-ready** AI assistant for Decentralized Finance (DeFi) queries and actions. Built with modern AI orchestration tools and enterprise-grade reliability featuring seamless dual AI system architecture.
+A **production-ready** AI assistant for Decentralized Finance (DeFi) queries and actions. Built with FastAPI, LangChain, and enterprise-grade reliability featuring flexible AI model selection and comprehensive transaction intelligence.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg?style=flat&logo=FastAPI)](https://fastapi.tiangolo.com)
-[![LangChain](https://img.shields.io/badge/LangChain-0.1.0-1C3C3C.svg?style=flat)](https://langchain.com)
+[![LangChain](https://img.shields.io/badge/LangChain-0.3.0-1C3C3C.svg?style=flat)](https://langchain.com)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg?style=flat&logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-green.svg?style=flat)](SECURITY.md)
 
 ## 🎯 Project Overview
 
-**Type**: Team Hackathon Project  
-**Team**: Backend AI System (Aayush) + Frontend & Blockchain Integration (Shubham and Adesh)  
+**Type**: Team Project - DeFi Agent
+**Team Structure**: 
+- **Backend AI System**: Aayush Kumar
+- **Frontend & UI**: Adesh Dutta
+- **Blockchain Integration**: Shubham Priyadarsi
 **Domain**: Decentralized Finance (DeFi)  
 **Status**: Production-Ready Backend ✅
 
 ### Key Features
 
-- 🔄 **Dual AI System**: Seamless switching between free Gemini and paid GPT-5 models
+- 🤖 **Flexible AI System**: Support for GPT-5 models and local Mistral-7B via Ollama
 - 🧠 **Smart Intent Classification**: Automatically routes queries to appropriate handlers
-- 💰 **Cost-Optimized**: 65% cost reduction through intelligent routing and prompt engineering
 - 🔍 **Vector Search**: Pinecone-powered semantic search for DeFi knowledge
-- 💬 **Advanced Session Management**: Auto-generated secure sessions with transaction state tracking
-- 🎯 **Transaction Intelligence**: Readiness analysis and smart parameter accumulation
+- 💬 **Advanced Session Management**: Secure sessions with conversation history and context awareness
+- 🎯 **Transaction Intelligence**: Complete parameter extraction and readiness analysis
 - ❓ **Intelligent Questioning**: Context-aware follow-up generation for missing parameters
-- 🛡️ **Enterprise Security**: Rate limiting, input sanitization, CORS protection, abuse prevention
-- 📊 **Production Monitoring**: Health checks, structured logging, error tracking, cost analysis
-- ⚡ **High Performance**: Connection pooling, lazy loading, graceful degradation
-- 🔗 **Team Integration Ready**: Clean APIs for frontend and blockchain integration
+- 🛡️ **Enterprise Security**: Rate limiting, input sanitization, CORS protection, comprehensive validation
+- 📊 **Production Monitoring**: Health checks, structured logging, error tracking with LangSmith
+- ⚡ **High Performance**: Connection pooling, lazy loading, caching, graceful degradation
+- 🔗 **Team Integration Ready**: Clean REST APIs designed for frontend and blockchain team integration
 
 ## 🏗️ Architecture
 
-### System Overview
+### Team System Architecture
 ```
 Frontend (Team) ←→ Backend AI System (This Repo) ←→ Blockchain (Team)
      │                        │                           │
@@ -41,21 +43,41 @@ Frontend (Team) ←→ Backend AI System (This Repo) ←→ Blockchain (Team)
      │                   └─────────┘                      │
      │                        │                           │
      │                   ┌─────────┐                      │
-     │                   │ Dual AI │                      │
-     │                   │ System  │                      │
+     │                   │   AI    │                      │
+     │                   │ Engine  │                      │
      │                   └─────────┘                      │
      │                        │                           │
      └─── Session Management ─┴─── Transaction Analysis ──┘
 ```
 
-### Smart Routing Logic
+### Component Responsibilities
+
+#### Backend AI System (This Repository)
+- **Intent Classification**: Determines query type and routing
+- **Session Management**: Secure session handling with auto-generation
+- **Transaction Intelligence**: Parameter accumulation and readiness analysis
+- **AI Processing**: GPT-5/Mistral integration with smart routing
+- **Security**: Enterprise-grade input validation and rate limiting
+
+#### Frontend Integration Points (Team)
+- **Session APIs**: Start, manage, and end user sessions
+- **Query Processing**: Real-time query handling with structured responses
+- **Transaction State**: Progress tracking and parameter completion
+- **Error Handling**: Standardized error responses for UI
+
+#### Blockchain Integration Points (Team)
+- **Transaction Ready Events**: When all parameters are collected
+- **Parameter Validation**: Ensure transaction parameters are valid
+- **Execution Feedback**: Status updates back to session management
+
+### Smart Processing Logic
 ```
 User Query → Intent Classification → Route Decision
     ↓
 ├─ General Query → Vector Search → Confidence-based Response
-│   ├─ ≥0.98 confidence → Direct DB answer (NO LLM cost)
-│   ├─ 0.90-0.98 → LLM refinement + context
-│   └─ <0.90 → LLM fallback + smart context
+│   ├─ ≥0.98 confidence → Direct DB answer (minimal AI cost)
+│   ├─ 0.90-0.98 → AI refinement + context
+│   └─ <0.90 → AI fallback + smart context
 │
 ├─ Action Request → Parameter Extraction → Session Merge → Transaction Analysis
 │   ├─ Complete Parameters → Ready for Blockchain Execution
@@ -65,55 +87,57 @@ User Query → Intent Classification → Route Decision
 └─ Clarification → Contextual Response → Suggested Queries
 ```
 
-### Component Responsibilities
+### Core Components
 
-#### Backend AI System (This Repository)
-- **Intent Classification**: Determines query type and routing
-- **Session Management**: Secure session handling with auto-generation
+#### AI Processing Engine
+- **Intent Classification**: Determines query type and routing using GPT-5-nano or Mistral-7B
+- **Query Processing**: Handles general DeFi questions with vector search + AI refinement
+- **Action Extraction**: Extracts transaction parameters from natural language
+- **Session Management**: Secure session handling with conversation context
+
+#### Integration Layer
+- **REST API**: Complete FastAPI-based REST interface
+- **Session Management**: Secure session lifecycle with auto-generation
 - **Transaction Intelligence**: Parameter accumulation and readiness analysis
-- **Cost Optimization**: Dual AI system with 65% cost reduction
-- **Security**: Enterprise-grade input validation and rate limiting
+- **Error Handling**: Comprehensive error handling with detailed responses
 
-#### Frontend Integration Points
-- **Session APIs**: Start, manage, and end user sessions
-- **Query Processing**: Real-time query handling with streaming support
-- **Transaction State**: Progress tracking and parameter completion
-- **Error Handling**: Standardized error responses for UI
-
-#### Blockchain Integration Points
-- **Transaction Ready Events**: When all parameters are collected
-- **Parameter Validation**: Ensure transaction parameters are valid
-- **Execution Feedback**: Status updates back to session management
+#### Data & Security Layer
+- **Vector Database**: Pinecone for semantic search of DeFi knowledge
+- **Caching**: Redis for session storage and performance optimization
+- **Security**: Rate limiting, input validation, CORS protection
+- **Monitoring**: Health checks, logging, and observability with LangSmith
 
 ### Technology Stack
 
-**AI Model Systems**
-- **Gemini System**: Free Google AI models (gemini-1.5-flash, gemini-1.5-pro)
-- **GPT-5 System**: Latest OpenAI models (gpt-5, gpt-5-mini, gpt-5-nano)
-- **Seamless Switching**: Toggle between systems with one environment variable
+**AI & ML**
+- **LangChain**: AI orchestration and chaining framework
+- **OpenAI GPT-5**: Latest models (gpt-5, gpt-5-mini, gpt-5-nano) for production
+- **Mistral-7B**: Local model support via Ollama for cost-effective deployment
+- **Sentence Transformers**: Vector embeddings (all-MiniLM-L6-v2)
+- **LangSmith**: Observability, tracing, and performance monitoring
 
 **Backend Framework**
-- FastAPI with async support and auto-documentation
-- Pydantic schemas for complete type safety
-- SlowAPI for intelligent rate limiting
+- **FastAPI**: Modern async Python web framework with auto-documentation
+- **Pydantic**: Complete type safety and data validation
+- **SlowAPI**: Intelligent rate limiting and abuse prevention
+- **Uvicorn**: High-performance ASGI server
 
-**AI & ML**
-- LangChain for AI orchestration and chaining
-- LangSmith for observability and tracing
-- Sentence Transformers for vector embeddings
-- Smart model selection and cost optimization
+**Data & Storage**
+- **Pinecone**: Vector database for semantic search
+- **Redis**: Session management, caching, and performance optimization
+- **JSON**: Structured data storage and API responses
 
-**Data Layer**
-- Pinecone for semantic vector search
-- Redis for session management and caching
-- Conversation memory with context awareness
+**Security & Monitoring**
+- **CORS**: Cross-origin resource sharing protection
+- **Rate Limiting**: Multi-tier request throttling
+- **Input Validation**: Comprehensive sanitization and validation
+- **Health Checks**: Multi-service monitoring and diagnostics
+- **Structured Logging**: Request tracking and error correlation
 
-**Production Features**
-- Enterprise-grade security and input sanitization
-- Comprehensive health monitoring and metrics
-- CORS middleware for secure frontend integration
-- Structured error handling with request tracking
-- Kubernetes-ready deployment configuration
+**Deployment**
+- **Docker**: Containerized deployment with multi-stage builds
+- **Environment Configuration**: Flexible configuration management
+- **Health Probes**: Application readiness and liveness checks
 
 ## 🚀 Quick Start
 
@@ -147,28 +171,23 @@ Required environment variables:
 # =============================================================================
 # AI SYSTEM SELECTION
 # =============================================================================
-USE_GEMINI=true  # true = Free Gemini, false = Paid GPT-5
+USE_GPT=true  # true = OpenAI GPT-5, false = Local Mistral-7B via Ollama
 
-# API Keys (choose based on USE_GEMINI setting)
-GOOGLE_API_KEY=your_google_api_key      # Required if USE_GEMINI=true
-OPENAI_API_KEY=your_openai_api_key      # Required if USE_GEMINI=false
-
-# Other API Keys
-PINECONE_API_KEY=your_pinecone_key
-LANGSMITH_API_KEY=your_langsmith_key
+# API Keys
+OPENAI_API_KEY=your_openai_api_key      # Required if USE_GPT=true
+PINECONE_API_KEY=your_pinecone_key      # Required for vector search
+LANGSMITH_API_KEY=your_langsmith_key    # Optional for observability
 
 # =============================================================================
 # MODEL CONFIGURATION
 # =============================================================================
-# For Gemini (Free)
-INTENT_MODEL=gemini-1.5-flash
-QUERY_MODEL=gemini-1.5-pro
-ACTION_MODEL=gemini-1.5-flash
+# For GPT-5 (Recommended for production)
+INTENT_MODEL=gpt-5-nano    # Fast intent classification
+QUERY_MODEL=gpt-5-mini     # Balanced performance/cost
+ACTION_MODEL=gpt-5-mini    # Parameter extraction
 
-# For GPT-5 (Paid) - uncomment when USE_GEMINI=false
-# INTENT_MODEL=gpt-5-nano
-# QUERY_MODEL=gpt-5-mini
-# ACTION_MODEL=gpt-5-mini
+# For Local Mistral (Cost-effective alternative)
+# Models automatically use mistral:7b when USE_GPT=false
 
 # =============================================================================
 # SYSTEM CONFIGURATION
@@ -247,8 +266,8 @@ Response:
 ```http
 GET /health/              # Basic health
 GET /health/detailed      # Full system status with AI system info
-GET /health/ready         # Kubernetes readiness
-GET /health/live          # Kubernetes liveness
+GET /health/ready         # Application readiness
+GET /health/live          # Application liveness
 GET /health/models        # Active AI system information
 ```
 
@@ -269,7 +288,7 @@ GET /query/sessions                 # List active sessions (admin)
   "answer": "Yield farming is a DeFi strategy where users provide liquidity to protocols in exchange for rewards...",
   "sources": ["DeFi Pulse", "Uniswap Docs"],
   "confidence": 0.95,
-  "ai_system": "gemini",
+  "ai_system": "gpt-5",
   "cost_analysis": {
     "tokens_used": 150,
     "estimated_cost": 0.0
@@ -336,21 +355,20 @@ GET /query/sessions                 # List active sessions (admin)
 ### AI Model System Selection
 ```bash
 # Choose your AI system in .env file
-USE_GEMINI=true   # Free Google Gemini models
-USE_GEMINI=false  # Paid OpenAI GPT-5 models
+USE_GPT=true   # OpenAI GPT-5 models (recommended for production)
+USE_GPT=false  # Local Mistral-7B via Ollama (cost-effective)
 ```
 
 ### Model Configuration
 ```python
-# Gemini Models (Free)
-INTENT_MODEL=gemini-1.5-flash    # Ultra-fast classification
-QUERY_MODEL=gemini-1.5-pro       # Advanced reasoning
-ACTION_MODEL=gemini-1.5-flash    # Parameter extraction
+# GPT-5 Models (Production)
+INTENT_MODEL=gpt-5-nano          # Ultra-fast classification
+QUERY_MODEL=gpt-5-mini           # Balanced performance/cost
+ACTION_MODEL=gpt-5-mini          # Parameter extraction
 
-# GPT-5 Models (Paid)
-INTENT_MODEL=gpt-5-nano          # $0.05 input per 1K tokens
-QUERY_MODEL=gpt-5-mini           # $0.25 input per 1K tokens  
-ACTION_MODEL=gpt-5-mini          # $0.25 input per 1K tokens
+# Mistral Models (Local/Cost-effective)
+# Automatically uses mistral:7b for all tasks when USE_GPT=false
+# Requires Ollama installation and model download
 ```
 
 ### System Settings
@@ -420,37 +438,40 @@ curl http://localhost:8000/health/detailed
 
 ## 💰 Cost Optimization
 
-### Dual AI System Architecture
+### Flexible AI System Architecture
 ```python
-# FREE Option: Gemini Models
-USE_GEMINI=true
-- 100% free for development and testing
-- 15 requests/minute, 1,500 requests/day
-- Perfect for demos and prototyping
+# PRODUCTION Option: GPT-5 Models
+USE_GPT=true
+- gpt-5-nano: Ultra-fast intent classification
+- gpt-5-mini: Balanced performance/cost for queries
+- gpt-5: Maximum capability when needed
+- Optimized token usage and smart caching
 
-# PAID Option: GPT-5 Models  
-USE_GEMINI=false
-- gpt-5-nano: $0.05 input per 1K tokens (90% cheaper than GPT-4)
-- gpt-5-mini: $0.25 input per 1K tokens (balanced performance)
-- gpt-5: $1.25 input per 1K tokens (maximum capability)
+# COST-EFFECTIVE Option: Local Mistral-7B
+USE_GPT=false
+- 100% free after initial setup
+- Runs locally via Ollama
+- No API rate limits or costs
+- Good performance for most DeFi tasks
 ```
 
-### Smart Routing Strategy
-- **High confidence (≥0.98)**: Direct vector DB response (0% AI cost)
+### Smart Processing Strategy
+- **High confidence (≥0.98)**: Direct vector DB response (minimal AI cost)
 - **Medium confidence (0.90-0.98)**: AI refinement only when needed
-- **Low confidence (<0.90)**: AI fallback with minimal context
+- **Low confidence (<0.90)**: AI fallback with optimized context
 
-### Intelligent Conversation Memory
+### Intelligent Context Management
 - Context only added for detected follow-ups (not every query)
 - 2-minute relevance window for context freshness
-- Truncated previous responses (100 chars max)
-- **Cost impact**: 5-10% increase vs 100%+ with naive approaches
+- Smart conversation history truncation
+- **Performance impact**: 5-10% context overhead vs 100%+ with naive approaches
 
 ### Performance Optimizations
 - Model instance caching and connection pooling
 - Lazy loading for ML models and embeddings
-- Redis session clustering for scalability
+- Redis caching for frequent queries
 - Async operations with proper error handling
+- Vector search optimization with confidence thresholds
 
 ## 🧪 Testing
 
@@ -460,8 +481,8 @@ USE_GEMINI=false
 curl http://localhost:8000/
 
 # 2. Check active AI system
-curl http://localhost:8000/health/models
-# Returns: "Gemini" or "GPT-5" system info
+curl http://localhost:8000/health/detailed
+# Returns: GPT-5 or Mistral system info
 
 # 3. Test DeFi query
 curl -X POST http://localhost:8000/query/ \
@@ -476,12 +497,13 @@ curl -X POST http://localhost:8000/query/ \
 
 ### AI System Switching Test
 ```bash
-# Test Gemini (Free)
-echo "USE_GEMINI=true" >> .env
+# Test GPT-5 (Production)
+echo "USE_GPT=true" >> .env
 # Restart server and test
 
-# Test GPT-5 (Paid)  
-echo "USE_GEMINI=false" >> .env
+# Test Local Mistral (Cost-effective)
+echo "USE_GPT=false" >> .env
+# Ensure Ollama is running with mistral:7b model
 # Restart server and test
 ```
 
@@ -489,8 +511,8 @@ echo "USE_GEMINI=false" >> .env
 ```bash
 # Comprehensive health checks
 curl http://localhost:8000/health/detailed  # Full system status
-curl http://localhost:8000/health/ready     # Kubernetes readiness
-curl http://localhost:8000/health/live      # Kubernetes liveness
+curl http://localhost:8000/health/ready     # Application readiness
+curl http://localhost:8000/health/live      # Application liveness
 curl http://localhost:8000/health/models    # AI system info
 ```
 
@@ -520,32 +542,32 @@ EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-### Kubernetes Deployment
+### Docker Compose Deployment
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: defi-ai-assistant
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: defi-ai-assistant
-  template:
-    spec:
-      containers:
-      - name: api
-        image: defi-ai-assistant:latest
-        ports:
-        - containerPort: 8000
-        livenessProbe:
-          httpGet:
-            path: /health/live
-            port: 8000
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 8000
+version: '3.8'
+services:
+  defi-ai-assistant:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_GPT=true
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
 ```
 
 ## 📈 Performance Metrics
@@ -557,22 +579,22 @@ spec:
 - **Cost Efficiency**: 80% queries served without LLM calls
 
 ### Scalability
-- Horizontal scaling ready
+- Horizontal scaling ready with Docker
 - Stateless design
-- Redis session clustering
+- Redis session management
 - Load balancer compatible
 
 ## 🤝 Team Integration
 
 ### Backend API Contracts
-This backend provides clean, well-documented APIs for frontend and blockchain integration:
+This backend provides clean, well-documented APIs specifically designed for team integration:
 
 #### For Frontend Team
 ```typescript
 // TypeScript interfaces for frontend integration
 interface SessionResponse {
   session_id: string;
-  expires_at: string;
+  created_at: string;
   status: 'active' | 'expired';
 }
 
@@ -584,7 +606,7 @@ interface QueryResponse {
   missing_parameters?: string[];
   suggested_questions?: string[];
   transaction_ready?: boolean;
-  ai_system: 'gemini' | 'gpt-5';
+  ai_system: 'gpt-5' | 'mistral';
   cost_analysis: CostInfo;
 }
 
@@ -615,12 +637,12 @@ interface TransactionDetails {
 }
 ```
 
-### Integration Points
-- **WebSocket Support**: Ready for real-time transaction updates
-- **CORS Configuration**: Pre-configured for frontend origins
-- **Error Handling**: Standardized error responses for UI handling
-- **Session Management**: Secure session sharing across components
-- **Cost Tracking**: Built-in cost analysis for optimization
+### Team Integration Features
+- **CORS Configuration**: Pre-configured for team frontend origins
+- **Error Handling**: Standardized error responses for consistent UI handling
+- **Session Management**: Secure session sharing across team components
+- **Transaction State**: Complete parameter tracking for blockchain execution
+- **Real-time Ready**: Designed for WebSocket integration when needed
 
 ## 🔮 Future Roadmap
 
@@ -632,11 +654,11 @@ interface TransactionDetails {
 - [ ] Custom fine-tuned DeFi models
 
 ### Team Collaboration Features
-- [ ] WebSocket endpoints for real-time updates
-- [ ] GraphQL API alongside REST
-- [ ] Enhanced transaction state management
-- [ ] Multi-step transaction orchestration
-- [ ] Advanced parameter validation
+- [ ] WebSocket endpoints for real-time updates (for frontend team)
+- [ ] GraphQL API alongside REST (if requested by frontend team)
+- [ ] Enhanced transaction state management (for blockchain team)
+- [ ] Multi-step transaction orchestration (cross-team feature)
+- [ ] Advanced parameter validation (blockchain integration)
 
 ### Technical Improvements
 - [ ] Advanced caching with Redis Cluster
@@ -664,12 +686,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **OpenAI** for language model capabilities
 - **FastAPI** for modern Python web framework
 
-## 📞 Support
+## 📞 Team Support
 
-For questions, issues, or contributions:
+### For Team Members
+- **Backend Issues**: Create an issue in this repository
+- **Integration Questions**: Contact Aayush Kumar (aayushkr646@gmail.com)
+- **API Documentation**: See [docs/TEAM_INTEGRATION.md](docs/TEAM_INTEGRATION.md)
+- **Deployment Help**: See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+### For External Contributors
 - Create an issue in this repository
-- Contact: aayushkr646@gmail.com
+- Follow the contribution guidelines in [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-**Built with ❤️ for the DeFi community**
+**Built with ❤️ by the team for the DeFi*
