@@ -34,21 +34,7 @@ A **production-ready** AI assistant for Decentralized Finance (DeFi) queries and
 ## 🏗️ Architecture
 
 ### Team System Architecture
-```
-Frontend (Team) ←→ Backend AI System (This Repo) ←→ Blockchain (Team)
-     │                        │                           │
-     │                   ┌─────────┐                      │
-     │                   │ FastAPI │                      │
-     │                   │   API   │                      │
-     │                   └─────────┘                      │
-     │                        │                           │
-     │                   ┌─────────┐                      │
-     │                   │   AI    │                      │
-     │                   │ Engine  │                      │
-     │                   └─────────┘                      │
-     │                        │                           │
-     └─── Session Management ─┴─── Transaction Analysis ──┘
-```
+<img width="1920" height="1080" alt="Archi" src="https://github.com/user-attachments/assets/97dbe7c4-e44d-4615-827d-4ab32e2f5790" />
 
 ### Component Responsibilities
 
