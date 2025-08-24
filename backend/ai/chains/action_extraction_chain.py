@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Prompt for extracting structured action info
 _action_prompt = ChatPromptTemplate.from_template(
     """Current: {current_state}
+    You are an AI assistant that extracts structured DeFi action details from user requests.
 User: {query}
 
 Extract JSON only. Do NOT add any text outside JSON.
@@ -20,7 +21,7 @@ Extract JSON only. Do NOT add any text outside JSON.
 - amount: numeric value only, or null
 - token_in: token symbol (e.g., "ETH", "USDC") or null  
 - token_out: token symbol or null
-- protocol: string or null
+- protocol: string or null (e.g., "AAVE", "Uniswap", "Compound")
 - slippage: numeric value or null
 
 Only extract info from this message. Do not infer from prior context. Return strictly valid JSON."""

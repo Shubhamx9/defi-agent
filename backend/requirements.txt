@@ -28,6 +28,3 @@ tqdm>=4.66.1
 
 # Rate limiting
 slowapi>=0.1.9
-
-# Google AI (Gemini)
-langchain-google-genai>=1.0.1
