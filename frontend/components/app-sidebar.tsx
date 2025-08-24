@@ -43,7 +43,7 @@ export function AppSidebar() {
       {/* Sidebar top / trigger */}
       <div
         className={`px-[11px] pt-5 ${
-          darkMode ? "bg-gray-900 text-white" : "bg-slate-50 text-black"
+          darkMode ? "bg-slate-900 text-white" : "bg-slate-50 text-black"
         }`}
       >
         <SidebarTrigger
@@ -57,7 +57,7 @@ export function AppSidebar() {
         className={cn(
           "flex flex-col h-full justify-between", // make content a column with full height
           darkMode
-            ? "bg-gray-900 text-white border-gray-700"
+            ? "bg-slate-900 text-white border-gray-700"
             : "bg-slate-50 text-gray-700 border-gray-200"
         )}
       >
