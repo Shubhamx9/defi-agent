@@ -53,35 +53,21 @@ export default function ChatbotPage(): JSX.Element {
   setMessages(prev => [...prev, { role: 'bot', text: '' }]);
 
   try {
-    const eventSource = new EventSource(`http://localhost:8000/chat?query=${encodeURIComponent(text)}&user_id=user_12345&new_chat=${messages.length === 0}`);
+    const res = await fetch('http://localhost:8000/query/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: text,
+        user_id: 'user_12345'
+      }),
+    });
+    const data = await res.json();
 
-    eventSource.onmessage = (event) => {
-      if (event.data === "[DONE]") {
-        eventSource.close();
-        return;
-      }
-
-      // Append streamed text to last bot message
-      setMessages(prev => {
-        const lastMsg = prev[prev.length - 1];
-        if (lastMsg.role === 'bot') {
-          return [...prev.slice(0, -1), { role: 'bot', text: lastMsg.text + " " + event.data }];
-        }
-        return prev;
-      });
-    };
-
-    eventSource.onerror = (err) => {
-      console.error("SSE Error:", err);
-      setMessages(prev => [
-        ...prev.slice(0, -1),
-        { role: 'bot', text: '⚠️ Error streaming response.' }
-      ]);
-      eventSource.close();
-    };
-
+    setMessages(prev => [
+      ...prev.slice(0, -1),
+      { role: 'bot', text: data.answer || data.clarification_question || 'No answer.' }
+    ]);
   } catch (error) {
-    console.error(error);
     setMessages(prev => [
       ...prev.slice(0, -1),
       { role: 'bot', text: '⚠️ Error contacting server.' }

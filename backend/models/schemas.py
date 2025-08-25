@@ -298,27 +298,18 @@ class ClarificationResponse(BaseModel):
 
 class QueryResponse(BaseModel):
     """Unified schema for all query responses."""
-    intent: IntentType = Field(..., description="Classified intent type")
-    session_id: Optional[str] = Field(None, description="Session identifier")
     
     # General query fields
     answer: Optional[str] = Field(None, description="AI-generated response")
-    sources: Optional[List[str]] = Field(None, description="Information sources")
     
     # Action request fields
     action_details: Optional[ActionDetails] = Field(None, description="Extracted action parameters")
     transaction_readiness: Optional[TransactionReadiness] = Field(None, description="Transaction readiness analysis")
     next_step: Optional[str] = Field(None, description="Next step in action flow")
     confirmation_required: Optional[bool] = Field(None, description="Whether confirmation is needed")
-    estimated_gas: Optional[str] = Field(None, description="Estimated gas cost")
     
     # Clarification fields
     clarification_question: Optional[str] = Field(None, description="Clarification question")
-    suggested_queries: Optional[List[str]] = Field(None, description="Example queries")
-    
-    # Common fields
-    confidence: Optional[float] = Field(None, ge=0, le=1, description="Response confidence")
-    intent_confidence: Optional[float] = Field(None, ge=0, le=1, description="Intent classification confidence")
 
 
 # Error Schemas

@@ -91,10 +91,9 @@ def handle_query(
             else "gather_final_details" if readiness["readiness_level"] == "ALMOST_READY"
             else "gather_more_information"
         )
-
+        #This Retun would Go to Coinbasepart and then returned to frontend
         return QueryResponse(
             intent=IntentType.ACTION_REQUEST.value,
-            session_id=session_id,
             action_details=action_details,
             transaction_readiness=transaction_readiness,
             next_step=next_step,
@@ -108,13 +107,9 @@ def handle_query(
         except Exception as e:
             logger.exception("run_query_chain_dict failed: %s", e)
             raise HTTPException(status_code=500, detail="Error processing query")
-        return QueryResponse(
-            intent=IntentType.GENERAL_QUERY,
-            session_id=session_id,
-            answer=result.get("answer", "Unable to process request."),
-            sources=result.get("sources", []),
-            confidence=result.get("confidence", 0.0)
-        )
+        return {
+            "answer": result.get("answer", "I'm not sure how to help with that."),
+        }
 
     # --- CLARIFICATION (fallback) ---
     try:
@@ -124,11 +119,5 @@ def handle_query(
         raise HTTPException(status_code=500, detail="Error processing query")
 
     return QueryResponse(
-        intent=IntentType.CLARIFICATION,
-        session_id=session_id,
         clarification_question=result.get("answer", "Please provide more details."),
-        suggested_queries=result.get(
-            "suggested_queries",
-            ["What is DeFi?", "How do I start with yield farming?", "What are the risks in DeFi?"]
-        )
     )

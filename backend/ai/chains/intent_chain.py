@@ -15,12 +15,14 @@ def _get_intent_model():
     return get_intent_model()
 
 _intent_prompt = ChatPromptTemplate.from_template(
-    """Classify as:
+    """You are a DeFi assistant who Classify queries as:
 - general_query (info/education)
 - action_request (wants DeFi action or Information about current APY)
 - clarification (unclear)
 
 User: {query}
+
+These classicifications are mutually exclusive. Only respond with one of the three labels.: 
 Label:"""
 )
 
@@ -49,9 +51,7 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
     # Basic input sanitization
     if not query or not query.strip():
         return IntentClassificationResult(
-            intent=IntentType.CLARIFICATION,
-            confidence=1.0,
-            raw_output="empty_input"
+            intent=IntentType.CLARIFICATION
         )
     
     try:
@@ -63,9 +63,7 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
         if not out or not out.content:
             logger.warning("Empty response from intent classification model")
             return IntentClassificationResult(
-                intent=IntentType.CLARIFICATION,
-                confidence=0.1,
-                raw_output="empty_response"
+                intent=IntentType.CLARIFICATION
             )
         
         raw_intent = out.content.strip().lower()
@@ -81,15 +79,11 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
             confidence = 0.3  # Low confidence for fallback
         
         return IntentClassificationResult(
-            intent=intent,
-            confidence=confidence,
-            raw_output=raw_intent
+            intent=intent
         )
         
     except Exception as e:
         logger.error(f"Intent classification error: {e}")
         return IntentClassificationResult(
-            intent=IntentType.CLARIFICATION,
-            confidence=0.1,
-            raw_output=f"error: {str(e)}"
+            intent=IntentType.CLARIFICATION
         )
