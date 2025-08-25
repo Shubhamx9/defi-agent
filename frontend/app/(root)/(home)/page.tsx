@@ -18,8 +18,8 @@ export default function Home() {
   }
 
   return (
-    <main className={`${darkMode ? "bg-gray-900 text-white" : "bg-slate-100 text-black"}`}>
-      <section className="p-10 max-w-7xl mx-auto">
+    <main className={`min-h-screen ${darkMode ? "bg-gradient-to-br from-slate-900 via-gray-900 to-gray-950 text-white" : "bg-slate-100 text-black"}`}>
+      <section className="py-10 mx-auto">
         <div className=" overflow-hidden whitespace-nowrap py-3">
           <div className="animate-marquee ">
             <div className="flex gap-10 mr-10">
@@ -366,7 +366,7 @@ export default function Home() {
         </div>
         
         {/* some dashboard design welcome sugars*/}
-        <div className="text-center mb-10 mt-10">
+        <div className="mx-10 text-center mb-10 mt-10">
           <h1 className="text-4xl font-bold mb-4">Welcome to Your Crypto Dashboard</h1>
           <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} text-lg`}>
             Track your portfolio, get insights, and trade securely.
@@ -375,7 +375,7 @@ export default function Home() {
 
         {/* Chatbot Promo */}
         <div
-          className={`${
+          className={` mx-10 ${
             darkMode ? "bg-gray-800" : "bg-gray-100"
           } p-8 mt-10 rounded-2xl shadow-lg flex flex-col items-center text-center mb-12`}
         >

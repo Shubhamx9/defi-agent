@@ -14,14 +14,14 @@ const Slider = ({ darkMode }: { darkMode: boolean }) => {
 
   return (
     <nav>
-      <ul className="flex justify-center gap-8 py-4 relative">
+      <ul className=" flex justify-center gap-8 py-4 relative">
         {routes.map((route) => {
           const isActive = pathname === route.path;
           return (
-            <li key={route.path} className="relative">
+            <li key={route.path} className=" relative">
               <button
                 onClick={() => router.push(route.path)}
-                className={`pb-2 relative transition-colors duration-200 ${isActive ? "text-blue-600" : darkMode ? "text-gray-300" : "text-gray-700"}`}
+                className={`pb-2 cursor-pointer relative transition-colors duration-200 ${isActive ? "text-blue-600" : darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 {route.name}
               </button>
