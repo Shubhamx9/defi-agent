@@ -5,12 +5,14 @@ import { Bot, MessageSquare, Moon, Send, Sun } from 'lucide-react';
 import { useRecoilState } from 'recoil';
 import { darkModeState } from '@/recoil/blackandwhite';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import axios from 'axios';
 
 type Role = 'user' | 'bot';
 type Message = { role: Role; text: string };
 
 export default function ChatbotPage(): JSX.Element {
+  const user = useUser();
   const [darkMode, setDarkMode] = useRecoilState(darkModeState);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -37,18 +39,60 @@ export default function ChatbotPage(): JSX.Element {
     el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
   }
 
-  const handleSend = () => {
-    const text = input.trim();
-    if (!text) return;
-    const newMessage: Message = { role: 'user', text };
-    const botReply: Message = { role: 'bot', text: 'Gandu nhi Bhadwa h wo bsdk 🤖' };
-    setMessages(prev => [...prev, newMessage, botReply]);
-    setInput('');
-    if (textareaRef.current) textareaRef.current.style.height = 'auto';
-  };
+  const handleSend = async () => {
+  const text = input.trim();
+  if (!text) return;
+
+  // Add user message
+  const newMessage: Message = { role: 'user', text };
+  setMessages(prev => [...prev, newMessage]);
+  setInput('');
+  if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+  // Add placeholder bot message (empty, will stream text into it)
+  setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+
+  try {
+    const eventSource = new EventSource(`http://localhost:8000/chat?query=${encodeURIComponent(text)}&user_id=user_12345&new_chat=${messages.length === 0}`);
+
+    eventSource.onmessage = (event) => {
+      if (event.data === "[DONE]") {
+        eventSource.close();
+        return;
+      }
+
+      // Append streamed text to last bot message
+      setMessages(prev => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg.role === 'bot') {
+          return [...prev.slice(0, -1), { role: 'bot', text: lastMsg.text + " " + event.data }];
+        }
+        return prev;
+      });
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE Error:", err);
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { role: 'bot', text: '⚠️ Error streaming response.' }
+      ]);
+      eventSource.close();
+    };
+
+  } catch (error) {
+    console.error(error);
+    setMessages(prev => [
+      ...prev.slice(0, -1),
+      { role: 'bot', text: '⚠️ Error contacting server.' }
+    ]);
+  }
+};
+
 
   return (
     <main className={`h-full w-full flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-slate-100 text-black'}`}>
+      {/* Header */}
       <div className={`border-b ${darkMode ? "border-gray-700" : "border-gray-200"} px-4 py-6 flex justify-between `}>
         <div className={` flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-start`}>
             <div className={`rounded-lg ${darkMode ? "bg-gray-900 text-white shadow-gray-500" : "bg-white text-gray-700"} p-1 sm:p-2 shadow-sm`}>
@@ -64,20 +108,20 @@ export default function ChatbotPage(): JSX.Element {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end">
-            {/* Dark/Light Mode Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-1 sm:p-2 rounded-full border ${darkMode ? "border-gray-600" : "border-gray-400"}`}
+              className={`cursor-pointer p-1 sm:p-2 rounded-full border ${darkMode ? "border-gray-600" : "border-gray-400"}`}
               aria-label="Toggle dark mode"
             >
               {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />}
             </button>
-            {/* Connect Wallet Button */}
-            <button className={` text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
+            <button className={`cursor-pointer text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
               Connect Wallet 
             </button>
           </div>
       </div>
+
+      {/* Empty State */}
       {messages.length === 0 && (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">Welcome to AI Chatbot</h1>
@@ -85,6 +129,7 @@ export default function ChatbotPage(): JSX.Element {
         </div>
       )}
 
+      {/* Chat Messages */}
       {messages.length > 0 && (
         <div className="flex-1 p-6 overflow-y-auto space-y-5">
           {messages.map((msg, i) => (
@@ -98,6 +143,7 @@ export default function ChatbotPage(): JSX.Element {
         </div>
       )}
 
+      {/* Input Box */}
       <form onSubmit={e => { e.preventDefault(); handleSend(); }} className={`p-4 border-t ${darkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'} flex gap-3`}>
         <textarea
           ref={textareaRef}

@@ -47,20 +47,20 @@ export const Navbar = () => {
             {/* Dark/Light Mode Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-1 sm:p-2 rounded-full border ${darkMode ? "border-gray-600" : "border-gray-400"}`}
+              className={`cursor-pointer p-1 sm:p-2 rounded-full border ${darkMode ? "border-gray-600" : "border-gray-400"}`}
               aria-label="Toggle dark mode"
             >
               {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />}
             </button>
             
             {/* Connect Wallet Button */}
-            <button className={` text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
+            <button className={`cursor-pointer text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
               Connect Wallet 
             </button>
             <div>
               <SignedOut>
                 <SignInButton>
-                  <button className={` text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
+                  <button className={`cursor-pointer text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
                     Sign In 
                   </button>
                 </SignInButton>
