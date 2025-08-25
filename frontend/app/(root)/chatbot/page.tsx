@@ -16,6 +16,7 @@ export default function ChatbotPage(): JSX.Element {
   const [darkMode, setDarkMode] = useRecoilState(darkModeState);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null); // <-- Add this line
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,6 +32,15 @@ export default function ChatbotPage(): JSX.Element {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const storedSessionId = localStorage.getItem('sessionId');
+    if (storedSessionId) setSessionId(storedSessionId);
+  }, []);
+
+  useEffect(() => {
+    if (sessionId) localStorage.setItem('sessionId', sessionId);
+  }, [sessionId]);
+
   function autoResize(el: HTMLTextAreaElement) {
     el.style.height = 'auto';
     const max = 200;
@@ -40,40 +50,40 @@ export default function ChatbotPage(): JSX.Element {
   }
 
   const handleSend = async () => {
-  const text = input.trim();
-  if (!text) return;
+    const text = input.trim();
+    if (!text) return;
 
-  // Add user message
-  const newMessage: Message = { role: 'user', text };
-  setMessages(prev => [...prev, newMessage]);
-  setInput('');
-  if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setMessages(prev => [...prev, { role: 'bot', text: '' }]);
 
-  // Add placeholder bot message (empty, will stream text into it)
-  setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+    try {
+      const res = await fetch('http://localhost:8000/query/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: text,
+          user_id: 'user_12345',
+          session_id: sessionId || undefined // always send sessionId if available
+        }),
+      });
+      const data = await res.json();
 
-  try {
-    const res = await fetch('http://localhost:8000/query/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: text,
-        user_id: 'user_12345'
-      }),
-    });
-    const data = await res.json();
+      // Always update sessionId from backend response
+      if (data.session_id) setSessionId(data.session_id);
 
-    setMessages(prev => [
-      ...prev.slice(0, -1),
-      { role: 'bot', text: data.answer || data.clarification_question || 'No answer.' }
-    ]);
-  } catch (error) {
-    setMessages(prev => [
-      ...prev.slice(0, -1),
-      { role: 'bot', text: '⚠️ Error contacting server.' }
-    ]);
-  }
-};
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { role: 'bot', text: data.answer || data.clarification_question || 'No answer.' }
+      ]);
+    } catch (error) {
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { role: 'bot', text: '⚠️ Error contacting server.' }
+      ]);
+    }
+  };
 
 
   return (

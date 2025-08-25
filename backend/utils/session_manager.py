@@ -13,8 +13,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-SESSION_TTL = 3600  # 1 hour
-MAX_SESSIONS_PER_USER = 5
+SESSION_TTL = 1800  # 30 mins
+MAX_SESSIONS_PER_USER = 10
 
 # Lua script: atomically INCR user session count iff below limit; set TTL.
 # Returns: -1 if over limit, else new count.

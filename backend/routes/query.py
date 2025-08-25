@@ -56,6 +56,7 @@ def handle_query(
     if not must_create:
         session_data = SessionManager.get_session(user_id, session_id)
         if not session_data:
+            logger.info(f"Session {session_id} for user {user_id} not found, creating new session.")
             must_create = True
 
     if must_create:
@@ -94,6 +95,7 @@ def handle_query(
         #This Retun would Go to Coinbasepart and then returned to frontend
         return QueryResponse(
             intent=IntentType.ACTION_REQUEST.value,
+            session_id=session_id,
             action_details=action_details,
             transaction_readiness=transaction_readiness,
             next_step=next_step,
@@ -107,9 +109,10 @@ def handle_query(
         except Exception as e:
             logger.exception("run_query_chain_dict failed: %s", e)
             raise HTTPException(status_code=500, detail="Error processing query")
-        return {
-            "answer": result.get("answer", "I'm not sure how to help with that."),
-        }
+        return QueryResponse(
+            session_id=session_id,
+            answer=result.get("answer", "I'm not sure how to help with that."),
+        )
 
     # --- CLARIFICATION (fallback) ---
     try:
@@ -119,5 +122,6 @@ def handle_query(
         raise HTTPException(status_code=500, detail="Error processing query")
 
     return QueryResponse(
+        session_id=session_id,
         clarification_question=result.get("answer", "Please provide more details."),
     )
