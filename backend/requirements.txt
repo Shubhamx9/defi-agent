@@ -28,3 +28,8 @@ tqdm>=4.66.1
 
 # Rate limiting
 slowapi>=0.1.9
+
+#Coinbase Setup
+x402 
+coinbase-agentkit
+httpx

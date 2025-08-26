@@ -77,7 +77,7 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
     Extract DeFi action details and merge with existing session state in Redis.
     Returns properly validated ActionExtractionResult schema.
     """
-    # Step 1: Load existing session state (if any)
+    #Load existing session state (if any)
     cache_key = f"action_session:{user_id}"
     cached_state_json = get_cached_response(cache_key)
     
@@ -91,8 +91,8 @@ def extract_action_details(user_query: str, user_id: str) -> ActionExtractionRes
         session_state = _get_default_action_state()
 
 
-    # Step 2: Extract new details with context awareness
-    action_model = get_action_model("action")   # 🔑 now uses GPT or Mistral depending on USE_GPT
+    #Extract new details with context awareness
+    action_model = get_action_model("action") 
     current_state_summary = _format_current_state(session_state)
     msg = _action_prompt.format_messages(
         query=user_query,
