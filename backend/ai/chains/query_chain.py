@@ -7,9 +7,7 @@ from backend.models.schemas import QueryChainResult, SessionData, VectorMatch
 from backend.utils.model_selector import get_query_model
 from backend.utils.session_manager import SessionManager
 from langsmith import traceable
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 def _get_query_model():
     """Get query processing model with fallback handling."""

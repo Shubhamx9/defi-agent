@@ -9,9 +9,7 @@ import json
 from typing import Optional, Dict, Any
 from backend.models.schemas import SessionData
 from backend.utils.cache import get_cached_response, set_cached_response, get_redis_client
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 SESSION_TTL = 1800  # 30 mins
 MAX_SESSIONS_PER_USER = 10

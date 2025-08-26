@@ -2,11 +2,10 @@
 Embedding service with lazy loading and error handling.
 """
 from sentence_transformers import SentenceTransformer
-import logging
+from backend.logging_setup import logger
 from typing import List, Optional
 import functools
 
-logger = logging.getLogger(__name__)
 
 # Global model instance (lazy loaded)
 _model: Optional[SentenceTransformer] = None

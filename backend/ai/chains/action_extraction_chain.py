@@ -5,9 +5,7 @@ from backend.utils.cache import get_cached_response, set_cached_response
 from backend.models.schemas import ActionExtractionResult, DeFiAction
 from backend.utils.model_selector import get_action_model
 from langsmith import traceable
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 # Prompt for extracting structured action info
 _action_prompt = ChatPromptTemplate.from_template(

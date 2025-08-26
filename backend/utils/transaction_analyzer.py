@@ -4,9 +4,7 @@ Determines when enough information is gathered to execute transactions.
 """
 from typing import Dict, Any, List, Optional
 from backend.models.schemas import ActionDetails, DeFiAction
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 class TransactionAnalyzer:
     """Analyzes transaction completeness and readiness for execution."""

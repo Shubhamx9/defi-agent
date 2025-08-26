@@ -3,11 +3,10 @@ from langsmith import traceable
 from backend.models.schemas import IntentType, IntentClassificationResult
 from backend.utils.model_selector import get_intent_model
 from typing import Union
-import logging
+from backend.logging_setup import logger
 from backend.utils.embedding import get_embedding
 from backend.utils.vector_db import query_vector_db
 
-logger = logging.getLogger(__name__)
 
 # Get model instance through model manager
 def _get_intent_model():

@@ -6,9 +6,7 @@ from langchain.prompts import ChatPromptTemplate
 from backend.utils.model_selector import get_query_model
 from backend.models.schemas import ActionDetails, DeFiAction
 from typing import List, Dict, Any
-import logging
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 class QuestionGenerator:
     """Generates intelligent questions to gather missing transaction information."""

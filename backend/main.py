@@ -12,16 +12,12 @@ load_dotenv()
 
 from backend.config.settings import langchain_settings, security_settings
 from backend.exception_handler import global_exception_handler
-from backend.logging_setup import setup_logger
+from backend.logging_setup import logger
 from backend.middleware.log_requests import log_requests
 from backend.middleware.langsmith_tracer import LangSmithTracerMiddleware
 from backend.models.schemas import HealthResponse
 from backend.routes import auth
 
-
-
-# Logger setup
-logger = setup_logger()
 
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)

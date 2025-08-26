@@ -2,11 +2,9 @@
 Input sanitization middleware to prevent prompt injection and malicious inputs.
 """
 import re
-import logging
+from backend.logging_setup import logger
 from fastapi import HTTPException
 from typing import Any, Dict
-
-logger = logging.getLogger(__name__)
 
 # Suspicious patterns that might indicate prompt injection
 SUSPICIOUS_PATTERNS = [

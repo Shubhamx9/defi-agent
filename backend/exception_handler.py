@@ -4,7 +4,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from backend.models.schemas import ErrorDetail
-from backend.logging_setup import logger  # use the rotating logger
+from backend.logging_setup import logger 
 
 
 async def global_exception_handler(request: Request, exc: Exception):

@@ -2,11 +2,9 @@
 Redis cache with connection pooling and error handling.
 """
 import redis
-import logging
 from typing import Optional
 from backend.config.settings import redis_settings
-
-logger = logging.getLogger(__name__)
+from backend.logging_setup import logger
 
 # Connection pool for better performance
 _redis_pool = redis.ConnectionPool(
