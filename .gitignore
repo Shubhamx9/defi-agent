@@ -216,4 +216,5 @@ __marimo__/
 vector_db_queries.jsonl
 fix_imports
 logs
-.env.local
+.env.locatests/
+tests/

@@ -2,11 +2,7 @@ from langchain.prompts import ChatPromptTemplate
 from langsmith import traceable
 from backend.models.schemas import IntentType, IntentClassificationResult
 from backend.utils.model_selector import get_intent_model
-from typing import Union
 from backend.logging_setup import logger
-from backend.utils.embedding import get_embedding
-from backend.utils.vector_db import query_vector_db
-
 
 # Get model instance through model manager
 def _get_intent_model():
@@ -14,16 +10,20 @@ def _get_intent_model():
     return get_intent_model()
 
 _intent_prompt = ChatPromptTemplate.from_template(
-    """You are a DeFi assistant who Classify queries as:
-- general_query (info/education)
-- action_request (wants DeFi action or Information about current APY)
-- clarification (unclear)
+    """You are a DeFi assistant. Classify the user query into one of:
+
+- general_query → informational/educational (e.g., "What is staking?" or Greeting message like "Hello", "Hi", "Good morning")
+- action_intent → user wants to perform an action (e.g., "Send 5 USDC", "Check my balance", "What is my portfolio value?")
+- clarification → query is vague or incomplete
 
 User: {query}
 
-These classicifications are mutually exclusive. Only respond with one of the three labels.: 
+Respond with ONLY one label: general_query, action_intent, or clarification.
 Label:"""
 )
+
+
+
 
 @traceable(name="DeFi Intent Classification")
 def classify_intent(query: str) -> str:
@@ -44,8 +44,6 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
     """
     Classify query with detailed results including confidence and raw output.
     """
-    import logging
-    logger = logging.getLogger(__name__)
     
     # Basic input sanitization
     if not query or not query.strip():
@@ -67,11 +65,18 @@ def classify_intent_detailed(query: str) -> IntentClassificationResult:
         
         raw_intent = out.content.strip().lower()
         
+        # Map AI response to correct enum values
+        intent_mapping = {
+            "general_query": IntentType.GENERAL_QUERY,
+            "action_intent": IntentType.ACTION_REQUEST,  # Map action_intent to ACTION_REQUEST
+            "clarification": IntentType.CLARIFICATION
+        }
+        
         # Validate and map to enum
-        try:
-            intent = IntentType(raw_intent)
+        if raw_intent in intent_mapping:
+            intent = intent_mapping[raw_intent]
             confidence = 0.9  # High confidence for valid classifications
-        except ValueError:
+        else:
             # Fallback to clarification if invalid
             logger.warning(f"Invalid intent classification: {raw_intent}")
             intent = IntentType.CLARIFICATION

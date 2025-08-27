@@ -84,6 +84,15 @@ class ChatBot(BaseSettings):
     class Config:
         env_file = ".env"
 
+class CDPSettings(BaseSettings):
+    CDP_API_KEY_ID: str
+    CDP_API_KEY_SECRET: str
+    CDP_NETWORK_ID: str = "base-sepolia"
+    class Config:
+        env_file = ".env"
+
+
+
 
 # Instantiate
 openai_settings = OpenAISettings()
@@ -95,3 +104,4 @@ vector_settings = VectorSettings()
 session_settings = SessionSettings()
 chatbot_settings = ChatBot()
 langchain_settings = LangChainSettings()
+cdp_settings = CDPSettings()
