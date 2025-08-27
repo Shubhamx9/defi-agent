@@ -42,12 +42,12 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       {/* Sidebar top / trigger */}
       <div
-        className={`px-[11px] pt-5 ${
+        className={` px-[11px] pt-5 ${
           darkMode ? "bg-slate-900 text-white" : "bg-slate-50 text-black"
         }`}
       >
         <SidebarTrigger
-          className={`transition-transform duration-300 ease-in-out 
+          className={`cursor-pointer transition-transform duration-300 ease-in-out 
             ${open ? "translate-x-[200px]" : "translate-x-0"}`}
         />
       </div>
@@ -68,7 +68,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    className="gap-3 [&>svg]:h-5 [&>svg]:w-5"
+                    className=" gap-3 [&>svg]:h-5 [&>svg]:w-5"
                   >
                     <a href={item.url}>
                       <item.icon />

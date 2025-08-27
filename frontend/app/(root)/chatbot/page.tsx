@@ -7,6 +7,9 @@ import { darkModeState } from '@/recoil/blackandwhite';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import axios from 'axios';
+import Link from 'next/link';
+import WalletButton from '@/components/ui/connect-wallet';
+import Providers from '@/components/Providers';
 
 type Role = 'user' | 'bot';
 type Message = { role: Role; text: string };
@@ -106,14 +109,18 @@ export default function ChatbotPage(): JSX.Element {
           <div className="flex items-center gap-2 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end">
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`cursor-pointer p-1 sm:p-2 rounded-full border ${darkMode ? "border-gray-600" : "border-gray-400"}`}
+              className={`cursor-pointer p-2 rounded-full border transition-all hover:scale-110 hover:shadow-[0_0_10px_rgba(250,204,21,0.7)] ${darkMode ? "border-gray-600" : "border-gray-400"}`}
               aria-label="Toggle dark mode"
             >
-              {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />}
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-yellow-400 animate-pulse" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-700" />
+              )}
             </button>
-            <button className={`cursor-pointer text-slate-100 bg-gradient-to-r from-blue-500 to-purple-600 shadow hover:scale-105 px-2 sm:px-4 py-1 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-base font-medium transition-all duration-200`}>
-              Connect Wallet 
-            </button>
+            <Providers>
+              <WalletButton />
+            </Providers>
           </div>
       </div>
 
