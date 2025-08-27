@@ -12,9 +12,7 @@ export default function Sidebarprovider ({ children }: { children: React.ReactNo
     const darkMode = useRecoilValue(darkModeState);
     const [open, setOpen] = useRecoilState(openState);
   return (
-    <div className={cn(
-    "bg-black dark:bg-white/5" , darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-  )}>
+    <div >
         <SidebarProvider open={open} onOpenChange={setOpen} className="flex h-screen w-screen">
             <AppSidebar />
             <main className="h-screen flex flex-col w-screen">
