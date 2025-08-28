@@ -16,24 +16,30 @@ def encrypt(data: str) -> str:
     # For demo purposes, just base64 encode
     return base64.b64encode(data.encode()).decode()
 
+import base64
+import binascii
+
 def decrypt(encrypted_data: str) -> str:
     """
     Decrypt wallet data from storage.
 
-    In a true production system with end-to-end encryption, this function 
-    would contain logic to decrypt the 'encrypted_data' using a master key.
-    
+    In production, this should use proper key management (e.g., KMS/HSM).
+    Currently attempts base64 decoding for newer records, 
+    otherwise returns the raw string (legacy fallback).
+
     Args:
-        encrypted_data: The encrypted data from the database.
+        encrypted_data (str): The encrypted data from the database.
 
     Returns:
-        The decrypted wallet secret.
+        str: The decrypted wallet secret (likely a hex string).
     """
-    import base64
+    if not encrypted_data:
+        raise ValueError("No encrypted data provided")
+
     try:
-        # Try to base64 decode first (for new encrypted data)
-        decoded = base64.b64decode(encrypted_data).decode()
-        return decoded
-    except:
-        # If decoding fails, assume it's already in the correct format (legacy data)
+        # Attempt base64 decode (newer format)
+        decoded_bytes = base64.b64decode(encrypted_data, validate=True)
+        return decoded_bytes.decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError):
+        # Legacy format (already plain text/hex)
         return encrypted_data

@@ -87,7 +87,9 @@ class ChatBot(BaseSettings):
 class CDPSettings(BaseSettings):
     CDP_API_KEY_ID: str
     CDP_API_KEY_SECRET: str
+    CDP_WALLET_SECRET: str
     CDP_NETWORK_ID: str = "base-sepolia"
+    CDP_PAYMASTER_URL: str
     class Config:
         env_file = ".env"
 

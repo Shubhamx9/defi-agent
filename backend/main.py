@@ -1,4 +1,14 @@
 import os
+import asyncio
+
+# CRITICAL: Force standard asyncio policy before any imports
+asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+
+# Disable uvloop by removing it from sys.modules if present
+import sys
+if 'uvloop' in sys.modules:
+    del sys.modules['uvloop']
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
