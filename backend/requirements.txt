@@ -1,14 +1,28 @@
-fastapi
-uvicorn
-langchain
-langsmith
-pinecone
-openai
-pydantic-settings
-requests
-python-dotenv
-redis
-pytest
-starlette
-sentence-transformers
-tqdm
+# Core API framework
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+
+# Rate limiting
+slowapi>=0.1.9
+
+# AI/ML dependencies
+langchain>=0.3.0
+langchain-core>=0.3.72
+langsmith>=0.0.77
+langchain-openai
+langchain-ollama
+
+sentence-transformers>=2.2.2
+
+
+#Vector DB
+pinecone>=5.0.0
+
+# Configuration and utilities
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+requests>=2.32.3
+packaging>=24.2
+
+#Coinbase
+coinbase-agentkit
