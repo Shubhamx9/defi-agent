@@ -68,6 +68,7 @@ async def init_cdp_agent(user_id: str, wallet_info=None):
                 wallet_secret=cdp_settings.CDP_WALLET_SECRET,   # developer secret
                 owner=owner_key,                   # user’s key/address
                 network_id=cdp_settings.CDP_NETWORK_ID,
+                paymaster_url=cdp_settings.CDP_PAYMASTER_URL,
             )
         )
 
