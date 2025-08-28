@@ -118,10 +118,20 @@ async def process_x402_request(query: str, user_id: str) -> str:
     ##ADD TYPO CHECKING
     
     if user_id in pending_payments:
+        # Check if pending payment has expired
+        import time
+        payment_data = pending_payments[user_id]
+        if time.time() > payment_data.get("expires_at", 0):
+            del pending_payments[user_id]
+            return "⏰ Your previous payment request has expired. Please make a new request."
+        
         if "confirm" in q:
             try:
                 agent = await init_cdp_agent(user_id)
-                tx = agent.x402.pay(**pending_payments[user_id])
+                # Remove timeout fields before passing to CDP
+                payment_params = {k: v for k, v in payment_data.items() 
+                                if k not in ["created_at", "expires_at"]}
+                tx = agent.x402.pay(**payment_params)
                 del pending_payments[user_id]
                 return f"✅ x402 Payment executed. Tx: {tx.hash}"
             except Exception as e:
@@ -131,21 +141,60 @@ async def process_x402_request(query: str, user_id: str) -> str:
             del pending_payments[user_id]
             return "❌ Payment cancelled."
         else:
-            return "🤔 You have a pending payment. Reply 'confirm payment' or 'cancel'."
+            remaining_time = int(payment_data.get("expires_at", 0) - time.time())
+            return f"🤔 You have a pending payment (expires in {remaining_time}s). Reply 'confirm payment' or 'cancel'."
 
     try:
         params = extract_x402_parameters(query)
         service, amount, token = params["service"], params["amount"], params.get("token", "ETH")
+        
+        # Validate extracted parameters
+        if not service:
+            return "❌ Service type not specified. Please specify which service you want to pay for."
+        
+        if amount is None:
+            return "❌ Payment amount not specified. Please specify how much you want to pay."
+        
+        # Validate amount is positive number
+        try:
+            amount_float = float(amount)
+            if amount_float <= 0:
+                return "❌ Payment amount must be greater than zero."
+            if amount_float > 1000000:  # Reasonable upper limit
+                return "❌ Payment amount too large. Please specify a reasonable amount."
+        except (ValueError, TypeError):
+            return "❌ Invalid payment amount. Please specify a valid number."
+        
+        # Basic typo checking for common service names
+        service_corrections = {
+            "api": "api_access",
+            "data": "data_feed", 
+            "oracle": "oracle_query",
+            "feed": "data_feed"
+        }
+        if service in service_corrections:
+            service = service_corrections[service]
+        
         info = get_service_info(service)
         if not info:
-            return f"⚠️ Service '{service}' not found."
+            return f"⚠️ Service '{service}' not found. Available services: api_access, data_feed, oracle_query"
+        
+        # Validate token symbol
+        valid_tokens = ["ETH", "USDC", "USDT", "DAI"]
+        if token.upper() not in valid_tokens:
+            return f"❌ Unsupported token '{token}'. Supported tokens: {', '.join(valid_tokens)}"
+        
+        # Store validated parameters with timeout (5 minutes from now)
+        import time
         pending_payments[user_id] = {
             "service_id": service,
-            "amount": amount,
-            "token": token,
+            "amount": amount_float,
+            "token": token.upper(),
             "to_address": info["recipient_address"],
+            "created_at": time.time(),
+            "expires_at": time.time() + 300  # 5 minutes timeout
         }
-        return f"🔍 Confirm {amount} {token} for {info['name']} → {info['recipient_address']}"
+        return f"🔍 Confirm {amount_float} {token.upper()} for {info['name']} → {info['recipient_address']}"
     except Exception as e:
         logger.error(f"x402 flow failed: {e}")
         return "❌ Could not process x402 request."

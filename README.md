@@ -1,9 +1,10 @@
 # DeFi AI Assistant 🚀
 
-A **production-ready** AI assistant for Decentralized Finance (DeFi) queries and actions. Built with FastAPI, LangChain, and enterprise-grade reliability featuring flexible AI model selection and comprehensive transaction intelligence.
+A **production-ready** AI assistant for Decentralized Finance (DeFi) queries and blockchain actions. Built with FastAPI, LangChain, Coinbase CDP AgentKit, and enterprise-grade reliability featuring flexible AI model selection, comprehensive transaction intelligence, and x402 payment protocol support.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg?style=flat&logo=FastAPI)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3.0-1C3C3C.svg?style=flat)](https://langchain.com)
+[![CDP AgentKit](https://img.shields.io/badge/CDP%20AgentKit-Latest-blue.svg?style=flat)](https://github.com/coinbase/cdp-agentkit)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg?style=flat&logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Enterprise%20Grade-green.svg?style=flat)](SECURITY.md)
@@ -26,6 +27,9 @@ A **production-ready** AI assistant for Decentralized Finance (DeFi) queries and
 - 💬 **Advanced Session Management**: Secure sessions with conversation history and context awareness
 - 🎯 **Transaction Intelligence**: Complete parameter extraction and readiness analysis
 - ❓ **Intelligent Questioning**: Context-aware follow-up generation for missing parameters
+- 🔗 **Coinbase CDP Integration**: Full AgentKit support for wallet operations, token transfers, and DeFi actions
+- 💳 **x402 Payment Protocol**: Integrated support for service payments and API access
+- 🏦 **Multi-Chain Support**: Base Sepolia testnet with production network ready
 - 🛡️ **Enterprise Security**: Rate limiting, input sanitization, CORS protection, comprehensive validation
 - 📊 **Production Monitoring**: Health checks, structured logging, error tracking with LangSmith
 - ⚡ **High Performance**: Connection pooling, lazy loading, caching, graceful degradation
@@ -102,6 +106,12 @@ User Query → Intent Classification → Route Decision
 - **Sentence Transformers**: Vector embeddings (all-MiniLM-L6-v2)
 - **LangSmith**: Observability, tracing, and performance monitoring
 
+**Blockchain & DeFi**
+- **Coinbase CDP AgentKit**: Smart wallet management and DeFi operations
+- **x402 Protocol**: Service payment and API access management
+- **Base Network**: Sepolia testnet with mainnet configuration ready
+- **Multi-Protocol Support**: Uniswap, Aave, and other DeFi protocols
+
 **Backend Framework**
 - **FastAPI**: Modern async Python web framework with auto-documentation
 - **Pydantic**: Complete type safety and data validation
@@ -163,6 +173,14 @@ USE_GPT=true  # true = OpenAI GPT-5, false = Local Mistral-7B via Ollama
 OPENAI_API_KEY=your_openai_api_key      # Required if USE_GPT=true
 PINECONE_API_KEY=your_pinecone_key      # Required for vector search
 LANGSMITH_API_KEY=your_langsmith_key    # Optional for observability
+
+# =============================================================================
+# COINBASE CDP CONFIGURATION
+# =============================================================================
+CDP_API_KEY_ID=your_cdp_api_key_id          # Coinbase Developer Platform API Key ID
+CDP_API_KEY_SECRET=your_cdp_api_key_secret  # Coinbase Developer Platform API Secret
+CDP_WALLET_SECRET=your_cdp_wallet_secret    # CDP Wallet Secret for smart wallet operations
+CDP_NETWORK_ID=base-sepolia                 # Network: base-sepolia (testnet) or base-mainnet (production)
 
 # =============================================================================
 # MODEL CONFIGURATION
@@ -630,6 +648,28 @@ interface TransactionDetails {
 - **Transaction State**: Complete parameter tracking for blockchain execution
 - **Real-time Ready**: Designed for WebSocket integration when needed
 
+## ⚠️ Known Issues & Technical Debt
+
+### Critical Issues Requiring Attention
+- **x402 Global State**: Pending payments stored in global dictionaries (memory leaks, race conditions)
+- **Weak Encryption**: Wallet secrets use base64 encoding instead of proper encryption
+- **Hardcoded Test Data**: Same wallet secret returned for all users in mock DB
+- **Event Loop Conflicts**: Complex nest_asyncio patching may fail in different environments
+- **Missing Validation**: x402 parameters not validated before processing
+
+### Security Improvements Needed
+- Implement proper AES encryption for wallet secrets with key management
+- Add payment timeout mechanisms for x402 transactions
+- Replace global state with Redis-based session storage
+- Add comprehensive parameter validation for all CDP operations
+- Implement proper error boundaries for CDP agent failures
+
+### Performance Optimizations
+- Fix model selection logic for local Mistral deployment
+- Add connection pooling for CDP agent instances
+- Implement proper cleanup for abandoned transactions
+- Add circuit breakers for external service calls
+
 ## 🔮 Future Roadmap
 
 ### AI System Enhancements
@@ -638,6 +678,14 @@ interface TransactionDetails {
 - [ ] Local model support (Llama, Mistral)
 - [ ] Multi-model ensemble responses
 - [ ] Custom fine-tuned DeFi models
+
+### Blockchain & DeFi Enhancements
+- [ ] Multi-chain support (Ethereum, Polygon, Arbitrum)
+- [ ] Advanced DeFi protocol integrations (Compound, MakerDAO)
+- [ ] MEV protection and transaction optimization
+- [ ] Cross-chain bridge operations
+- [ ] Yield farming strategy automation
+- [ ] Portfolio management and rebalancing
 
 ### Team Collaboration Features
 - [ ] WebSocket endpoints for real-time updates (for frontend team)
